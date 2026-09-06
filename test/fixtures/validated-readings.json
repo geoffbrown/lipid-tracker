@@ -1,0 +1,23 @@
+{
+  "_comment": [
+    "The six real readings the LipidLog calculator was validated against, per",
+    "LipidLog-CC-handoff.md. These are the ground truth: every other test in",
+    "this suite proves the code is self-consistent, but only these prove it",
+    "produces the right numbers.",
+    "",
+    "Add one object per reading. 'input' is the raw stored reading exactly as",
+    "the app would hold it (tc, hdl, tg, ldl, source, apobMeasured). 'expect'",
+    "lists only the derived fields you want pinned — any subset of nonHDL,",
+    "tcHdl, tgHdl, ldlFried, ldlMH, ldlDelta, apob, apobLabel.",
+    "",
+    "Example:",
+    "{ \"note\": \"Curo L7, 2026-03-14\",",
+    "  \"input\": { \"tc\": 180, \"hdl\": 55, \"tg\": 100, \"ldl\": 105, \"source\": \"POC\" },",
+    "  \"apobMethod\": \"interheart\",",
+    "  \"expect\": { \"ldlMH\": 108.9, \"ldlFried\": 105, \"nonHDL\": 125 } }",
+    "",
+    "The suite skips this check while the list is empty and says so in its",
+    "output, so an empty file can never look like a pass."
+  ],
+  "readings": []
+}

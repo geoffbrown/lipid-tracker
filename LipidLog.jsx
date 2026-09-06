@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, createContext, useCo
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { BarChart2, List, Settings, Plus, ChevronRight, ChevronUp, ChevronDown, X,
   Trash2, Download, Check, Sun, Moon, Activity, FileText, Pencil, Delete } from "lucide-react";
+import { calcDerived, getDispLDL, metricValue, TG_CALC_MAX } from "./src/calc.js";
 
 /* ════════════════════════════════════════════════════════════════════════════
    THEME. Swiss-neutral. Chrome is monochrome (ink / paper); data carries colour.
@@ -71,64 +72,6 @@ const THEME_OPTS = [
   { value:"dark",   label:"Dark",   sub:"Always dark" },
 ];
 
-/* ════════════════════════════════════════════════════════════════════════════
-   CALCULATIONS
-   ════════════════════════════════════════════════════════════════════════════ */
-const MH_TABLE = [
-  [40,9.5],[50,8.9],[57,8.5],[65,8.0],[76,7.5],[90,7.0],[100,6.6],
-  [114,6.2],[130,5.9],[150,5.6],[172,5.3],[195,5.0],[216,4.9],
-  [245,4.8],[274,4.7],[311,4.5],[351,4.4],[401,4.3],
-];
-const getMHDiv = tg => { for (const [th,d] of MH_TABLE) if (tg < th) return d; return 4.0; };
-
-function calcDerived(r, apobMethod) {
-  const pn = v => (typeof v === "number" && isFinite(v) && v >= 0) ? v : null;
-  const TC = pn(r.tc);
-  const hdlRaw = pn(r.hdl);
-  const HDL = (hdlRaw != null && hdlRaw > 0) ? hdlRaw : null;
-  const TG = pn(r.tg);
-  const d = {};
-  if (TC != null && HDL != null) {
-    const nh = TC - HDL;
-    d.nonHDL = nh > 0 ? +nh.toFixed(1) : null;
-    d.tcHdl = +(TC / HDL).toFixed(2);
-  }
-  if (TG != null && HDL != null) d.tgHdl = +(TG / HDL).toFixed(2);
-  if (TC != null && HDL != null && TG != null) {
-    const fr = TC - HDL - TG / 5;
-    const mh = TC - HDL - TG / getMHDiv(TG);
-    d.ldlFried = fr > 0 ? +fr.toFixed(1) : null;
-    d.ldlMH    = mh > 0 ? +mh.toFixed(1) : null;
-    if (d.ldlFried != null && d.ldlMH != null) d.ldlDelta = +(d.ldlMH - d.ldlFried).toFixed(1);
-  }
-  const labApoB = r.source === "Lab" ? pn(r.apobMeasured) : null;
-  if (labApoB != null && labApoB > 0) { d.apob = labApoB; d.apobLabel = "Lab Measured"; }
-  else if (d.nonHDL != null) {
-    const est = apobMethod === "aggressive" ? 0.87 * d.nonHDL + 3 : 0.73 * d.nonHDL + 5;
-    d.apob = est > 0 ? Math.round(est) : null;
-    d.apobLabel = apobMethod === "aggressive" ? "Aggressive" : "INTERHEART";
-  }
-  return d;
-}
-function getDispLDL(reading, d, method) {
-  if (method === "martin-hopkins" && d.ldlMH != null) return { value:d.ldlMH, label:"Martin-Hopkins" };
-  if (method === "friedewald"     && d.ldlFried != null) return { value:d.ldlFried, label:"Friedewald" };
-  if (reading.ldl != null) return { value:reading.ldl, label:"Device" };
-  return null;
-}
-function metricValue(r, key, ldlMethod) {
-  switch (key) {
-    case "ldl":   return getDispLDL(r, r.d, ldlMethod)?.value ?? null;
-    case "hdl":   return r.hdl ?? null;
-    case "tc":    return r.tc ?? null;
-    case "tg":    return r.tg ?? null;
-    case "apob":  return r.d.apob ?? null;
-    case "nonHDL":return r.d.nonHDL ?? null;
-    case "tcHdl": return r.d.tcHdl ?? null;
-    case "tgHdl": return r.d.tgHdl ?? null;
-    default:      return null;
-  }
-}
 
 /* ════════════════════════════════════════════════════════════════════════════
    CONSTANTS & HELPERS
@@ -704,7 +647,7 @@ function ReadingDetail({ reading, settings, onClose, onEdit, onDelete }) {
   const ldl = getDispLDL(reading, d, settings.ldlMethod);
   const metrics = [
     ldl && { key:"ldl", label:`LDL-C (${ldl.label})`, value:ldl.value, unit:"mg/dL", color:"#DF3F2E" },
-    reading.ldl!=null && settings.ldlMethod!=="none" && {
+    reading.ldl!=null && settings.ldlMethod!=="none" && !ldl?.blocked && {
       label:"LDL-C (Device Reported)", value:reading.ldl, unit:"mg/dL", color:t.sec, sm:true },
     d.ldlDelta!=null && settings.ldlMethod==="martin-hopkins" && {
       label:"Martin-Hopkins − Device", value:(d.ldlDelta>=0?"+":"")+d.ldlDelta, unit:"mg/dL", color:t.sec, sm:true },
@@ -748,6 +691,12 @@ function ReadingDetail({ reading, settings, onClose, onEdit, onDelete }) {
           </div>
         ))}
       </div>
+      {ldl?.blocked && (
+        <div style={{marginTop:10,padding:"10px 13px",background:t.bg,borderRadius:11,
+          border:`1px dashed ${t.border}`,fontSize:11.5,color:t.sec,lineHeight:1.5}}>
+          {ldl.blockedReason}
+        </div>
+      )}
       <div style={{fontSize:10.5,color:t.muted,margin:"7px 4px 0"}}>
         Reference values are general guidance, not a diagnosis.
       </div>
@@ -982,6 +931,11 @@ function AddEditModal({ reading, settings, onSave, onClose }) {
     const tcv = parseNum(f.tc), hdlv = parseNum(f.hdl);
     if (tcv!=null && hdlv!=null && hdlv >= tcv)
       warns.push("HDL is at or above total cholesterol, which isn't physiologically possible. Non-HDL cholesterol and estimated ApoB can't be derived from this reading.");
+    // Neither LDL estimate is valid this high, so say so at entry rather than
+    // letting the reading land and silently show a device value instead.
+    const tgv = parseNum(f.tg);
+    if (tgv!=null && tgv >= TG_CALC_MAX)
+      warns.push(`Triglycerides of ${tgv} mg/dL are at or above ${TG_CALC_MAX} mg/dL. Neither Friedewald nor Martin-Hopkins is valid there, so this reading will show the reported LDL rather than a calculated one.`);
     setErrors(errs); setWarnings(warns);
     if (errs.length) return;
     // Out-of-range values are allowed, but confirmed first: a stray digit
