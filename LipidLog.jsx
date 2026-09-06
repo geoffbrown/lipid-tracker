@@ -1573,7 +1573,7 @@ function ReportView({ enriched, settings, onClose }) {
    SETTINGS
    ════════════════════════════════════════════════════════════════════════════ */
 function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
-  onRenameSource, onDeleteSource, auth, onSignOut }) {
+  onRenameSource, onDeleteSource }) {
   const t = useT();
   const [lpa, setLpa] = useState(settings.lpa||"");
   const [lpaSaved, setLpaSaved] = useState(false);
@@ -1636,24 +1636,6 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
   return (
     <>
       <div style={{paddingBottom:16}}>
-        <SectionLabel>Account</SectionLabel>
-        <div style={card}>
-          <div style={{padding:"13px 15px",display:"flex",alignItems:"center",gap:10,
-            borderBottom:`1px solid ${t.border}`}}>
-            <div style={{width:34,height:34,borderRadius:17,background:t.accent,color:t.accentText,
-              display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,
-              fontSize:15,flexShrink:0,fontFamily:FONT}}>
-              {(auth?.email?.[0]||"?").toUpperCase()}</div>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontSize:14,color:t.text,fontWeight:600,overflow:"hidden",
-                whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{auth?.email||"Signed in"}</div>
-              <div style={{fontSize:11.5,color:t.sec,marginTop:1}}>Synced to your account</div>
-            </div>
-          </div>
-          <Row label="Sign Out" sub="You'll need your email link to sign back in"
-            onPress={onSignOut} />
-        </div>
-
         <SectionLabel>Appearance</SectionLabel>
         <div style={card}>
           <Row label="Theme" value={themeL[settings.theme]} sub="System, Light, or Dark"
@@ -1883,78 +1865,9 @@ function useResolvedTheme(themeSetting) {
   return THEMES[eff] || THEMES.dark;
 }
 
-/* ── Sign-in (magic-link UX). Real link delivery is wired at deploy via Supabase. ─ */
-function SignIn({ onAuth }) {
-  const t = useT();
-  const [email, setEmail] = useState("");
-  const [sent, setSent]   = useState(false);
-  const [err, setErr]     = useState("");
-  const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
-  const submit = () => { if (!valid) { setErr("Enter a valid email address."); return; } setSent(true); };
-
-  const iS = { width:"100%",padding:"11px 13px",borderRadius:9,fontSize:15,boxSizing:"border-box",
-    border:`1px solid ${err?t.danger:t.border}`,background:t.bg,color:t.text,
-    outline:"none",fontFamily:FONT };
-  const primary = { width:"100%",padding:"12px",borderRadius:10,border:"none",cursor:"pointer",
-    background:t.accent,color:t.accentText,fontWeight:700,fontSize:15,fontFamily:FONT };
-
-  return (
-    <div style={{minHeight:"100vh",background:t.bg,display:"flex",alignItems:"center",
-      justifyContent:"center",padding:24,fontFamily:FONT,
-      animation:"llFadeIn .2s ease forwards"}}>
-      <style>{`@keyframes llFadeIn{from{opacity:0}to{opacity:1}}
-        input::placeholder{color:${t.muted};}`}</style>
-      <div style={{width:"100%",maxWidth:372}}>
-        <div style={{textAlign:"center",marginBottom:24}}>
-          <div style={{fontSize:25,fontWeight:800,color:t.text,letterSpacing:"-0.6px"}}>LipidLog</div>
-          <div style={{fontSize:13,color:t.sec,marginTop:5}}>Longitudinal cholesterol tracking</div>
-        </div>
-        <div style={{background:t.card,border:`1px solid ${t.border}`,borderRadius:14,padding:"24px 22px"}}>
-          {!sent ? (
-            <>
-              <div style={{fontSize:16,fontWeight:700,color:t.text,marginBottom:5}}>Sign in</div>
-              <div style={{fontSize:12.5,color:t.sec,marginBottom:18,lineHeight:1.55}}>
-                Enter your email and we'll send a one-time sign-in link. No password to remember.
-              </div>
-              <input autoFocus type="email" value={email} placeholder="you@example.com"
-                onChange={e=>{setEmail(e.target.value);setErr("");}}
-                onKeyDown={e=>e.key==="Enter"&&submit()}
-                style={{...iS,marginBottom:err?6:14}} />
-              {err && <div style={{fontSize:12,color:t.danger,marginBottom:14}}>{err}</div>}
-              <button onClick={submit} style={primary}>Email me a sign-in link</button>
-            </>
-          ) : (
-            <>
-              <div style={{fontSize:16,fontWeight:700,color:t.text,marginBottom:6}}>Check your inbox</div>
-              <div style={{fontSize:12.5,color:t.sec,marginBottom:18,lineHeight:1.55}}>
-                We sent a sign-in link to <span style={{color:t.text,fontWeight:600}}>{email.trim()}</span>.
-                Open it to finish signing in.
-              </div>
-              <button onClick={()=>onAuth({email:email.trim()})} style={primary}>Continue</button>
-              <div style={{fontSize:11,color:t.muted,margin:"10px 2px 0",lineHeight:1.5}}>
-                Demo build. Link delivery is simulated. The deployed app emails a real magic link
-                through Supabase.
-              </div>
-              <button onClick={()=>{setSent(false);setErr("");}}
-                style={{width:"100%",padding:"9px",marginTop:12,borderRadius:9,
-                  border:`1px solid ${t.border}`,background:"transparent",color:t.text,
-                  fontWeight:600,fontSize:13,cursor:"pointer",fontFamily:FONT}}>
-                Use a different email</button>
-            </>
-          )}
-        </div>
-        <div style={{textAlign:"center",fontSize:11,color:t.muted,marginTop:16,lineHeight:1.5}}>
-          For informational purposes only · not a substitute for medical advice
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function App() {
   const [readings, setReadings] = useState([]);
   const [settings, setSettings] = useState(DEF_SETTINGS);
-  const [auth, setAuth]         = useState(null);
   const [loaded, setLoaded]     = useState(false);
   const [view, setView]         = useState("dashboard");
   const [modal, setModal]       = useState(null);
@@ -1988,10 +1901,6 @@ export default function App() {
         delete s.devices; delete s.customDevices;
         setSettings(p=>({...p,...s}));
       }
-      try {
-        const a = await window.storage.get("lipidlog_auth", false);
-        if (a) setAuth(JSON.parse(a.value));
-      } catch {}
       setLoaded(true);
     })();
     return ()=>{ try{document.head.removeChild(link);}catch{} };
@@ -2034,9 +1943,6 @@ export default function App() {
     return ()=>{ window.removeEventListener("pagehide", flushPersistNow);
       document.removeEventListener("visibilitychange", onHide); };
   },[]);
-
-  const handleAuth   = a => { setAuth(a); schedulePersist("lipidlog_auth", a); };
-  const handleSignOut= () => { setAuth(null); schedulePersist("lipidlog_auth", null); setView("dashboard"); };
 
   /* Source entries live in two independent pools: homeDevices and labSources.
      Rename propagates to that pool, its default pointer, and every reading that
@@ -2081,11 +1987,10 @@ export default function App() {
       background:t.bg,fontFamily:FONT,color:t.sec,fontSize:15}}>Loading…</div>
   );
 
-  if (!auth) return (
-    <ThemeCtx.Provider value={t}>
-      <SignIn onAuth={handleAuth} />
-    </ThemeCtx.Provider>
-  );
+  /* No auth gate. The prototype stores readings locally via window.storage,
+     so there is no account to sign in to and nothing a client-side gate could
+     protect. Real Supabase magic-link auth plugs in here in the web port,
+     once single-user vs multi-user is settled — see LipidLog-CC-handoff.md. */
 
   return (
     <ThemeCtx.Provider value={t}>
@@ -2144,8 +2049,7 @@ export default function App() {
           {view==="history"   && <HistoryView enriched={enriched} settings={settings} onSelect={setDetail} />}
           {view==="settings"  && <SettingsView settings={settings} onUpdate={updateSettings}
             enriched={enriched} onClearAll={()=>updateReadings([])} onOpenReport={()=>setReport(true)}
-            onRenameSource={renameSource} onDeleteSource={deleteSource}
-            auth={auth} onSignOut={handleSignOut} />}
+            onRenameSource={renameSource} onDeleteSource={deleteSource} />}
         </main>
 
         <nav style={{position:"fixed",bottom:0,left:0,right:0,background:`${t.card}F2`,
