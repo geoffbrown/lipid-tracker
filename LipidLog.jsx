@@ -196,17 +196,31 @@ function flushPersistNow() {
 function setPersistStuckHandler(fn) { _onStuck = fn; }
 /* ──────────────────────────────────────────────────────────────────────────── */
 
+/* Every field goes through this. Device names, notes and localised dates all
+   contain commas in normal use, and an unquoted one silently shifts every
+   later column — the file still opens, the numbers are just wrong. RFC 4180:
+   quote when the value contains a comma, quote, CR or LF, and double any
+   embedded quote. */
+function csvCell(v) {
+  if (v == null) return "";
+  const s = String(v);
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
 function exportCSV(readings, settings) {
-  const hdr = ["Date","Source","Device","TC","HDL","LDL (Device)","LDL (MH)","LDL (Fried)",
+  const hdr = ["Timestamp","Source","Device","TC","HDL","LDL (Device)","LDL (MH)","LDL (Fried)",
     "TG","Non-HDL","ApoB","ApoB Label","TC/HDL","TG/HDL","Notes"];
   const rows = [...readings].sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)).map(r=>{
     const d = calcDerived(r, settings.apobMethod);
-    return [fmtDate(r.timestamp), srcMeta(r.source).label, r.sourceName||"", r.tc??"", r.hdl??"",
-      r.ldl??"", d.ldlMH??"", d.ldlFried??"", r.tg??"", d.nonHDL??"", d.apob??"", d.apobLabel??"",
-      d.tcHdl??"", d.tgHdl??"", `"${(r.notes||"").replace(/"/g,"'")}"`].join(",");
+    /* ISO 8601 rather than a display date: readings are stored to minute
+       precision, and the old export discarded the time of day entirely. */
+    return [r.timestamp, srcMeta(r.source).label, r.sourceName, r.tc, r.hdl,
+      r.ldl, d.ldlMH, d.ldlFried, r.tg, d.nonHDL, d.apob, d.apobLabel,
+      d.tcHdl, d.tgHdl, r.notes].map(csvCell).join(",");
   });
   const a = Object.assign(document.createElement("a"), {
-    href: URL.createObjectURL(new Blob([[hdr.join(","),...rows].join("\n")],{type:"text/csv"})),
+    href: URL.createObjectURL(new Blob([[hdr.join(","),...rows].join("\r\n")],
+      {type:"text/csv;charset=utf-8"})),
     download: "lipidlog_export.csv",
   });
   a.click();
@@ -924,9 +938,12 @@ function AddEditModal({ reading, settings, onSave, onClose }) {
     vals.forEach((v,i)=>{ if (v!==null && v<0) errs.push(`${["TC","HDL","LDL","TG"][i]} cannot be negative.`); });
     if (parseNum(f.hdl)===0) errs.push("HDL cannot be 0.");
     if (new Date(f.timestamp).getTime() > Date.now()+60000) warns.push("The date and time are in the future.");
-    Object.entries({tc:[80,500],hdl:[10,150],ldl:[20,400],tg:[20,1000]}).forEach(([k,[lo,hi]])=>{
+    /* Lab-measured ApoB is only collected for Lab sources, so it is only
+       range-checked there. */
+    [["tc","TC",80,500],["hdl","HDL",10,150],["ldl","LDL",20,400],["tg","TG",20,1000],
+     ...(f.source==="Lab" ? [["apobMeasured","ApoB",20,250]] : [])].forEach(([k,label,lo,hi])=>{
       const v = parseNum(f[k]);
-      if (v!==null && (v<lo||v>hi)) warns.push(`${k.toUpperCase()} of ${v} is ${v<lo?"below":"above"} the typical range (${lo}-${hi} mg/dL).`);
+      if (v!==null && (v<lo||v>hi)) warns.push(`${label} of ${v} is ${v<lo?"below":"above"} the typical range (${lo}-${hi} mg/dL).`);
     });
     const tcv = parseNum(f.tc), hdlv = parseNum(f.hdl);
     if (tcv!=null && hdlv!=null && hdlv >= tcv)
@@ -1580,6 +1597,7 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
   const [picker, setPicker] = useState(null);          // "ldl" | "apob" | "theme"
   const [confirmClear, setConfirmClear] = useState(false);
   const [deviceDialog, setDeviceDialog] = useState(null); // {mode,pool,name?}
+  const [apobPending, setApobPending] = useState(null);   // method awaiting confirmation
   const [confirmDevice, setConfirmDevice] = useState(null); // {pool,name}
 
   const homeDevices = settings.homeDevices?.length ? settings.homeDevices : SEED_HOME;
@@ -1800,7 +1818,7 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
       {picker==="apob" && (
         <Sheet onClose={()=>setPicker(null)}>{close=>(
           <SelectSheet title="ApoB Method" options={APOB_OPTS} current={settings.apobMethod}
-            onSelect={v=>{onUpdate({...settings,apobMethod:v});close();}} onClose={close}
+            onSelect={v=>{ if (v!==settings.apobMethod) setApobPending(v); close(); }} onClose={close}
             footer={"ApoB reflects the number of atherogenic particles in your blood. When it isn\u2019t lab-measured, LipidLog estimates it from non-HDL cholesterol. INTERHEART is a conservative, validated regression; Aggressive applies a higher coefficient for a more risk-weighted estimate. A lab-measured ApoB always takes priority over either estimate."} />
         )}</Sheet>
       )}
@@ -1810,6 +1828,16 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
             onSelect={v=>{onUpdate({...settings,theme:v});close();}} onClose={close} />
         )}</Sheet>
       )}
+      {apobPending && (()=>{
+        const nameOf = v => APOB_OPTS.find(o=>o.value===v)?.label ?? v;
+        return (
+          <ConfirmDialog title="Change ApoB method?"
+            message={`Changing from ${nameOf(settings.apobMethod)} to ${nameOf(apobPending)} will recalculate all derived values. Measured values will remain unchanged.`}
+            confirmLabel="Continue"
+            onConfirm={()=>{ onUpdate({...settings,apobMethod:apobPending}); setApobPending(null); }}
+            onCancel={()=>setApobPending(null)} />
+        );
+      })()}
       {deviceDialog?.mode==="add" && (
         <InputDialog title={deviceDialog.pool==="lab"?"Add Lab Source":"Add Device"}
           placeholder={deviceDialog.pool==="lab"?"e.g. LabCorp, Dr. Smith":"e.g. Curo L7 (kitchen)"}
