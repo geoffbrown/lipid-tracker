@@ -414,7 +414,54 @@ it in `--color-ink-soft` in both directions, and drop `--color-up`/`--color-down
 from the trend indicator. Reserve semantic red for destructive actions and
 validation errors only.
 
-### 8.1.4 Accessibility debt to clear in the port
+### 8.1.4 Contrast — resolved
+
+The neutral ramp has been retuned in both themes. `sec` and `muted` carry real
+content — provenance labels, reference ranges, the interval a delta is measured
+over — and both previously failed WCAG AA: `muted` sat at 2.48:1 on dark and
+2.33:1 on light. Hairlines were worse in effect: card borders and dividers at
+0.08 alpha measured 1.24:1 against the dark card, which is why surfaces
+dissolved into the background.
+
+| token | light | dark |
+|---|---|---|
+| `sec` | `#5E5E68` (5.8:1) | `#9C9CA6` (6.6:1) |
+| `muted` | `#6C6C76` (4.7:1) | `#85858F` (5.0:1) |
+| `border` | `#DCDCE0` | 16% white |
+| `borderHi` | `#C4C4CA` | 30% white |
+| `grid` | `#E2E2E6` | 13% white |
+
+The source badges needed their own fix: they painted the label in the source
+colour on a 12% tint of that same colour, which tops out around 3:1 regardless
+of theme. The tint stays — it is the source identity — and the label now takes a
+per-theme variant of the same hue (`SRC_HOME.ink` / `SRC_LAB.ink`).
+
+`sec` and `muted` are now close in value by necessity: text that must be
+readable cannot be much lighter than the text above it in the hierarchy. That
+hierarchy is carried by size and weight instead of by fading, which is the more
+robust encoding anyway.
+
+Every string the app renders was checked in a browser at 390x844 in both
+themes, compositing translucent backgrounds against their real ground, and all
+pass AA.
+
+### 8.1.5 Type scale
+
+Minimum rendered size is 16px. No text in the app is smaller, and body text sits
+at 17-19px.
+
+A single flat size was considered and rejected: it removes the hierarchy that
+makes a dense screen scannable, and the dashboard reads by hierarchy rather than
+top to bottom. Raising the floor achieves the legibility without flattening the
+page.
+
+The type scale drove one layout change. Three stat cards across a phone leave
+about 91px of usable width per card, which cannot hold `INTERHEART` — let alone
+`Martin-Hopkins` — at 16px. The card row now scrolls horizontally with fixed
+158px cards, so each caption sits on one line and the partly visible next card
+is its own affordance. It also lifts the cap of three.
+
+### 8.1.6 Remaining accessibility debt
 
 Grip's neutral ramp has been contrast-tuned, with the reasoning left in the
 source (*"darkened from #9a9aa1 for ~4:1 AA-ish contrast"*). LipidLog's has not,
@@ -494,7 +541,7 @@ readings come from different source types it names the other source instead
 
 ---
 
-### 8.1.5 Open question — which tokens are the source of truth?
+### 8.1.7 Open question — which tokens are the source of truth?
 
 The handoff lists Figma design tokens maintained via Tokens Studio and exported
 as native variables and styles. Those were built for the iOS app and would need

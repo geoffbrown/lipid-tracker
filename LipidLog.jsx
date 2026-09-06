@@ -12,17 +12,17 @@ import { downsample, fitTrend, fmtSpan } from "./src/chart.js";
 const THEMES = {
   light: {
     isDark:false, bg:"#F4F4F5", card:"#FFFFFF", cardHi:"#FAFAFA",
-    border:"#E4E4E7", borderHi:"#D4D4D8", grid:"#ECECEE",
-    text:"#18181B", sec:"#71717A", muted:"#A1A1AA",
+    border:"#DCDCE0", borderHi:"#C4C4CA", grid:"#E2E2E6",
+    text:"#18181B", sec:"#5E5E68", muted:"#6C6C76",
     accent:"#18181B", accentText:"#FFFFFF",
     overlay:"rgba(24,24,27,0.32)", danger:"#D92D20", dangerBg:"#FEF3F2",
     success:"#067647", warnBg:"#FFFAEB", warn:"#B54708",
   },
   dark: {
     isDark:true, bg:"#0C0C0D", card:"#161618", cardHi:"#1F1F22",
-    border:"rgba(255,255,255,0.08)", borderHi:"rgba(255,255,255,0.15)",
-    grid:"rgba(255,255,255,0.05)",
-    text:"#FAFAFA", sec:"#8A8A93", muted:"#56565C",
+    border:"rgba(255,255,255,0.16)", borderHi:"rgba(255,255,255,0.30)",
+    grid:"rgba(255,255,255,0.13)",
+    text:"#FAFAFA", sec:"#9C9CA6", muted:"#85858F",
     accent:"#FAFAFA", accentText:"#0C0C0D",
     overlay:"rgba(0,0,0,0.62)", danger:"#F97066", dangerBg:"rgba(249,112,102,0.12)",
     success:"#3CCB7F", warnBg:"rgba(247,144,9,0.1)", warn:"#F79009",
@@ -35,8 +35,8 @@ const FONT = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif
 const MONO = "'DM Mono', 'SF Mono', ui-monospace, monospace";
 
 /* Source categories */
-const SRC_HOME = { color:"#1B9E5A", label:"Home" };
-const SRC_LAB  = { color:"#2E6FE0", label:"Lab"  };
+const SRC_HOME = { color:"#1B9E5A", label:"Home", ink:{ light:"#157B46", dark:"#1CA25C" } };
+const SRC_LAB  = { color:"#2E6FE0", label:"Lab",  ink:{ light:"#2062D5", dark:"#568BE6" } };
 const srcMeta  = s => (s === "Lab" ? SRC_LAB : SRC_HOME);
 
 /* Biomarker palette: mid-tone, legible on both light and dark. */
@@ -303,15 +303,15 @@ function ConfirmDialog({ title, message, confirmLabel="Confirm", danger, onConfi
         alignItems:"center",justifyContent:"center",padding:24,animation:"llFadeIn .18s ease forwards"}}>
       <div style={{background:t.card,borderRadius:16,padding:"22px 22px 18px",maxWidth:340,
         width:"100%",border:`1px solid ${t.border}`,animation:"llPopIn .2s cubic-bezier(.32,.72,0,1) forwards"}}>
-        <div style={{fontSize:18,fontWeight:700,color:t.text,marginBottom:6}}>{title}</div>
-        <div style={{fontSize:16,color:t.sec,lineHeight:1.5,marginBottom:20}}>{message}</div>
+        <div style={{fontSize:19.5,fontWeight:700,color:t.text,marginBottom:6}}>{title}</div>
+        <div style={{fontSize:18,color:t.sec,lineHeight:1.5,marginBottom:20}}>{message}</div>
         <div style={{display:"flex",gap:10}}>
           <button onClick={onCancel} style={{flex:1,padding:"11px",borderRadius:10,
             border:`1px solid ${t.border}`,background:"transparent",color:t.text,
-            fontWeight:600,fontSize:16,cursor:"pointer",fontFamily:FONT}}>Cancel</button>
+            fontWeight:600,fontSize:18,cursor:"pointer",fontFamily:FONT}}>Cancel</button>
           <button onClick={onConfirm} style={{flex:1,padding:"11px",borderRadius:10,border:"none",
             background:danger?t.danger:t.accent,color:danger?"#fff":t.accentText,
-            fontWeight:700,fontSize:16,cursor:"pointer",fontFamily:FONT}}>{confirmLabel}</button>
+            fontWeight:700,fontSize:18,cursor:"pointer",fontFamily:FONT}}>{confirmLabel}</button>
         </div>
       </div>
     </div>
@@ -333,20 +333,20 @@ function InputDialog({ title, placeholder, initial="", confirmLabel="Save", vali
         alignItems:"center",justifyContent:"center",padding:24,animation:"llFadeIn .18s ease forwards"}}>
       <div style={{background:t.card,borderRadius:16,padding:"22px",maxWidth:340,width:"100%",
         border:`1px solid ${t.border}`,animation:"llPopIn .2s cubic-bezier(.32,.72,0,1) forwards"}}>
-        <div style={{fontSize:18,fontWeight:700,color:t.text,marginBottom:14}}>{title}</div>
+        <div style={{fontSize:19.5,fontWeight:700,color:t.text,marginBottom:14}}>{title}</div>
         <input autoFocus value={val} placeholder={placeholder}
           onChange={e=>{setVal(e.target.value);setErr("");}}
           onKeyDown={e=>e.key==="Enter"&&submit()}
-          style={{width:"100%",padding:"11px 13px",borderRadius:9,fontSize:17,boxSizing:"border-box",
+          style={{width:"100%",padding:"11px 13px",borderRadius:9,fontSize:19,boxSizing:"border-box",
             border:`1px solid ${err?t.danger:t.border}`,background:t.bg,color:t.text,
             outline:"none",fontFamily:FONT,marginBottom:err?6:16}} />
-        {err && <div style={{fontSize:14,color:t.danger,marginBottom:14}}>{err}</div>}
+        {err && <div style={{fontSize:17,color:t.danger,marginBottom:14}}>{err}</div>}
         <div style={{display:"flex",gap:10}}>
           <button onClick={onCancel} style={{flex:1,padding:"11px",borderRadius:10,
             border:`1px solid ${t.border}`,background:"transparent",color:t.text,
-            fontWeight:600,fontSize:16,cursor:"pointer",fontFamily:FONT}}>Cancel</button>
+            fontWeight:600,fontSize:18,cursor:"pointer",fontFamily:FONT}}>Cancel</button>
           <button onClick={submit} style={{flex:1,padding:"11px",borderRadius:10,border:"none",
-            background:t.accent,color:t.accentText,fontWeight:700,fontSize:16,
+            background:t.accent,color:t.accentText,fontWeight:700,fontSize:18,
             cursor:"pointer",fontFamily:FONT}}>{confirmLabel}</button>
         </div>
       </div>
@@ -359,7 +359,7 @@ function Toast({ message }) {
   return (
     <div style={{position:"fixed",bottom:96,left:"50%",transform:"translateX(-50%)",zIndex:400,
       background:t.isDark?"#FAFAFA":"#18181B",color:t.isDark?"#18181B":"#FAFAFA",
-      padding:"10px 18px",borderRadius:10,fontSize:15.5,fontWeight:600,fontFamily:FONT,
+      padding:"10px 18px",borderRadius:10,fontSize:18,fontWeight:600,fontFamily:FONT,
       boxShadow:"0 8px 28px rgba(0,0,0,0.35)",animation:"llFadeIn .2s ease forwards",
       maxWidth:"calc(100% - 32px)",textAlign:"center"}}>{message}</div>
   );
@@ -367,10 +367,12 @@ function Toast({ message }) {
 
 /* Source badge: coloured Home / Lab tag. */
 function SourceBadge({ source }) {
+  const t = useT();
   const m = srcMeta(source);
   return (
-    <span style={{background:`${m.color}1F`,color:m.color,borderRadius:5,padding:"2px 7px",
-      fontSize:13,fontWeight:700,letterSpacing:"0.3px"}}>{m.label}</span>
+    <span style={{background:`${m.color}1F`,color:m.ink[t.isDark?"dark":"light"],
+      borderRadius:5,padding:"2px 7px",
+      fontSize:16,fontWeight:700,letterSpacing:"0.3px"}}>{m.label}</span>
   );
 }
 
@@ -400,7 +402,7 @@ function Segmented({ options, value, onChange }) {
         const on = v===value;
         return (
           <button key={v} onClick={()=>onChange(v)} style={{padding:"5px 10px",border:"none",
-            cursor:"pointer",fontFamily:FONT,fontSize:13.5,fontWeight:on?700:500,
+            cursor:"pointer",fontFamily:FONT,fontSize:16.5,fontWeight:on?700:500,
             background:on?t.accent:"transparent",color:on?t.accentText:t.sec,
             borderLeft:i>0?`1px solid ${t.border}`:"none"}}>{lbl}</button>
         );
@@ -415,7 +417,7 @@ function SheetHeader({ title, onClose }) {
   const t = useT();
   return (
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0 16px"}}>
-      <h2 style={{fontSize:19,fontWeight:700,margin:0,color:t.text}}>{title}</h2>
+      <h2 style={{fontSize:20,fontWeight:700,margin:0,color:t.text}}>{title}</h2>
       <button onClick={onClose} aria-label="Close" style={{background:t.cardHi,
         border:`1px solid ${t.border}`,borderRadius:18,width:30,height:30,display:"flex",
         alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
@@ -426,7 +428,7 @@ function SheetHeader({ title, onClose }) {
 }
 function SectionLabel({ children }) {
   const t = useT();
-  return <div style={{fontSize:13,fontWeight:600,color:t.sec,textTransform:"uppercase",
+  return <div style={{fontSize:16,fontWeight:600,color:t.sec,textTransform:"uppercase",
     letterSpacing:"0.6px",margin:"22px 4px 8px"}}>{children}</div>;
 }
 
@@ -455,7 +457,7 @@ function Stepper({ value, onUp, onDown }) {
     <div style={{display:"flex",alignItems:"center"}}>
       <button onClick={onDown} aria-label="Decrease" style={{...btn,borderRadius:"7px 0 0 7px"}}>
         <ChevronRight size={13} style={{transform:"rotate(180deg)"}} /></button>
-      <div style={{fontSize:17,fontWeight:600,fontFamily:MONO,color:t.text,minWidth:36,height:30,
+      <div style={{fontSize:19,fontWeight:600,fontFamily:MONO,color:t.text,minWidth:36,height:30,
         display:"flex",alignItems:"center",justifyContent:"center",
         borderTop:`1px solid ${t.border}`,borderBottom:`1px solid ${t.border}`}}>{value}</div>
       <button onClick={onUp} aria-label="Increase" style={{...btn,borderRadius:"0 7px 7px 0"}}>
@@ -488,7 +490,7 @@ function DateTimePicker({ value, onChange }) {
   const pm = dt.getHours()>=12;
 
   const field = { width:"100%",padding:"10px 12px",borderRadius:8,boxSizing:"border-box",
-    border:`1px solid ${open?t.accent:t.border}`,background:t.bg,fontSize:17,
+    border:`1px solid ${open?t.accent:t.border}`,background:t.bg,fontSize:19,
     fontFamily:FONT,color:t.text,cursor:"pointer",display:"flex",transition:"border-color .2s",
     justifyContent:"space-between",alignItems:"center" };
   const navBtn = { background:t.cardHi,border:`1px solid ${t.border}`,borderRadius:7,
@@ -510,7 +512,7 @@ function DateTimePicker({ value, onChange }) {
               <button onClick={()=>shiftMonth(-1)} aria-label="Previous month" style={navBtn}>
                 <ChevronRight size={13} color={t.sec} style={{transform:"rotate(180deg)"}} />
               </button>
-              <span style={{fontSize:15,fontWeight:700,color:t.text}}>
+              <span style={{fontSize:17.5,fontWeight:700,color:t.text}}>
                 {new Date(view.y,view.m,1).toLocaleDateString("en-US",{month:"long",year:"numeric"})}</span>
               <button onClick={()=>shiftMonth(1)} aria-label="Next month" style={navBtn}>
                 <ChevronRight size={13} color={t.sec} />
@@ -518,7 +520,7 @@ function DateTimePicker({ value, onChange }) {
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)"}}>
               {DOW.map((d,i)=>(
-                <div key={i} style={{textAlign:"center",fontSize:12,fontWeight:600,color:t.muted,
+                <div key={i} style={{textAlign:"center",fontSize:16,fontWeight:600,color:t.muted,
                   padding:"0 0 3px"}}>{d}</div>
               ))}
             </div>
@@ -527,7 +529,7 @@ function DateTimePicker({ value, onChange }) {
                 <div key={i} style={{height:28}}>
                   {d && (
                     <button onClick={()=>pickDay(d)} style={{width:"100%",height:"100%",border:"none",
-                      cursor:"pointer",fontFamily:MONO,fontSize:14,borderRadius:6,
+                      cursor:"pointer",fontFamily:MONO,fontSize:17,borderRadius:6,
                       background:isSel(d)?t.accent:"transparent",
                       color:isSel(d)?t.accentText:t.text,
                       fontWeight:isSel(d)||isToday(d)?700:400,
@@ -540,7 +542,7 @@ function DateTimePicker({ value, onChange }) {
             <div style={{display:"flex",alignItems:"center",gap:10,marginTop:10,paddingTop:10,
               borderTop:`1px solid ${t.border}`,justifyContent:"center"}}>
               <Stepper value={h12} onUp={()=>stepHour(1)} onDown={()=>stepHour(-1)} />
-              <span style={{fontSize:17,fontWeight:700,color:t.muted}}>:</span>
+              <span style={{fontSize:19,fontWeight:700,color:t.muted}}>:</span>
               <Stepper value={String(dt.getMinutes()).padStart(2,"0")}
                 onUp={()=>stepMin(1)} onDown={()=>stepMin(-1)} />
               <div style={{display:"flex",border:`1px solid ${t.border}`,borderRadius:7,overflow:"hidden"}}>
@@ -548,7 +550,7 @@ function DateTimePicker({ value, onChange }) {
                   const on=(x==="PM")===pm;
                   return (
                     <button key={x} onClick={()=>setAmPm(x==="PM")} style={{padding:"7px 10px",border:"none",
-                      cursor:"pointer",fontFamily:FONT,fontSize:13.5,fontWeight:on?700:500,
+                      cursor:"pointer",fontFamily:FONT,fontSize:16.5,fontWeight:on?700:500,
                       background:on?t.accent:"transparent",color:on?t.accentText:t.sec}}>{x}</button>
                   );
                 })}
@@ -557,11 +559,11 @@ function DateTimePicker({ value, onChange }) {
             <div style={{display:"flex",gap:8,marginTop:10}}>
               <button onClick={()=>{ apply(new Date()); setView({y:new Date().getFullYear(),m:new Date().getMonth()}); }}
                 style={{flex:1,padding:"7px",borderRadius:8,border:`1px solid ${t.border}`,
-                  background:"transparent",color:t.text,fontWeight:600,fontSize:14.5,
+                  background:"transparent",color:t.text,fontWeight:600,fontSize:17.5,
                   cursor:"pointer",fontFamily:FONT}}>Now</button>
               <button onClick={()=>setOpen(false)}
                 style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:t.accent,
-                  color:t.accentText,fontWeight:700,fontSize:14.5,cursor:"pointer",fontFamily:FONT}}>Done</button>
+                  color:t.accentText,fontWeight:700,fontSize:17.5,cursor:"pointer",fontFamily:FONT}}>Done</button>
             </div>
           </div>
         </div>
@@ -580,21 +582,21 @@ function ChartTooltip({ active, payload, label, bmA, bmB }) {
   return (
     <div style={{background:t.card,border:`1px solid ${t.borderHi}`,borderRadius:9,
       padding:"8px 11px",boxShadow:"0 6px 24px rgba(0,0,0,0.35)",fontFamily:FONT,pointerEvents:"none"}}>
-      <div style={{fontSize:12.5,color:t.sec,textTransform:"uppercase",letterSpacing:".4px",
+      <div style={{fontSize:16,color:t.sec,textTransform:"uppercase",letterSpacing:".4px",
         marginBottom:6}}>
         {fmtDate(label)}
         {src && <span> · {src === "mixed" ? "Averaged" : srcMeta(src).label}</span>}
       </div>
       {av?.value!=null && (
         <div style={{display:"flex",alignItems:"baseline",gap:4,marginBottom:bv?4:0}}>
-          <span style={{fontSize:19,fontWeight:600,color:a?.color,fontFamily:MONO}}>{av.value}</span>
-          <span style={{fontSize:13,color:t.sec}}>{a?.label}</span>
+          <span style={{fontSize:20,fontWeight:600,color:a?.color,fontFamily:MONO}}>{av.value}</span>
+          <span style={{fontSize:16,color:t.sec}}>{a?.label}</span>
         </div>
       )}
       {bv?.value!=null && (
         <div style={{display:"flex",alignItems:"baseline",gap:4}}>
-          <span style={{fontSize:19,fontWeight:600,color:b?.color,fontFamily:MONO}}>{bv.value}</span>
-          <span style={{fontSize:13,color:t.sec}}>{b?.label}</span>
+          <span style={{fontSize:20,fontWeight:600,color:b?.color,fontFamily:MONO}}>{bv.value}</span>
+          <span style={{fontSize:16,color:t.sec}}>{b?.label}</span>
         </div>
       )}
     </div>
@@ -607,8 +609,8 @@ const ReadingRow = function ReadingRow({ reading, ldlMethod, onSelect }) {
   const ldl = getDispLDL(reading, reading.d, ldlMethod);
   const Metric = ({ label, value }) => (
     <span style={{display:"inline-flex",alignItems:"baseline",gap:5}}>
-      <span style={{fontSize:12.5,fontWeight:600,color:t.muted,letterSpacing:"0.4px"}}>{label}</span>
-      <span style={{fontSize:17,fontWeight:600,color:t.text,fontFamily:MONO,
+      <span style={{fontSize:16,fontWeight:600,color:t.muted,letterSpacing:"0.4px"}}>{label}</span>
+      <span style={{fontSize:19,fontWeight:600,color:t.text,fontFamily:MONO,
         fontVariantNumeric:"tabular-nums"}}>{value}</span>
     </span>
   );
@@ -621,9 +623,9 @@ const ReadingRow = function ReadingRow({ reading, ldlMethod, onSelect }) {
       <div style={{flex:1,minWidth:0}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
           <SourceBadge source={reading.source} />
-          <span style={{fontSize:14.5,color:t.sec}}>{fmtDate(reading.timestamp)}</span>
+          <span style={{fontSize:17.5,color:t.sec}}>{fmtDate(reading.timestamp)}</span>
           {reading.sourceName && (
-            <span style={{fontSize:13.5,color:t.muted,overflow:"hidden",whiteSpace:"nowrap",
+            <span style={{fontSize:16.5,color:t.muted,overflow:"hidden",whiteSpace:"nowrap",
               textOverflow:"ellipsis"}}>· {reading.sourceName}</span>
           )}
         </div>
@@ -634,7 +636,7 @@ const ReadingRow = function ReadingRow({ reading, ldlMethod, onSelect }) {
           {reading.d.apob!=null && <Metric label="ApoB" value={reading.d.apob} />}
         </div>
         {reading.notes && (
-          <div style={{fontSize:13.5,color:t.muted,marginTop:7,overflow:"hidden",
+          <div style={{fontSize:16.5,color:t.muted,marginTop:7,overflow:"hidden",
             whiteSpace:"nowrap",textOverflow:"ellipsis",maxWidth:280}}>{reading.notes}</div>
         )}
       </div>
@@ -667,8 +669,8 @@ function ReadingDetail({ reading, settings, onClose, onEdit, onDelete }) {
     <div style={{padding:"4px 20px 28px"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"8px 0 16px"}}>
         <div>
-          <div style={{fontSize:19,fontWeight:700,color:t.text}}>{fmtDate(reading.timestamp)}</div>
-          <div style={{fontSize:14.5,color:t.sec,marginTop:4,display:"flex",alignItems:"center",gap:7}}>
+          <div style={{fontSize:20,fontWeight:700,color:t.text}}>{fmtDate(reading.timestamp)}</div>
+          <div style={{fontSize:17.5,color:t.sec,marginTop:4,display:"flex",alignItems:"center",gap:7}}>
             <SourceBadge source={reading.source} />{reading.sourceName} · {fmtTime(reading.timestamp)}
           </div>
         </div>
@@ -689,7 +691,7 @@ function ReadingDetail({ reading, settings, onClose, onEdit, onDelete }) {
               <span style={{fontSize:m.sm?13:16,fontWeight:600,color:m.color,fontFamily:MONO,
                 fontVariantNumeric:"tabular-nums"}}>{m.value}{m.unit?` ${m.unit}`:""}</span>
               {!m.sm && m.key && REF_RANGES[m.key] && (
-                <div style={{fontSize:13,color:t.muted,marginTop:2,fontFamily:FONT}}>{REF_RANGES[m.key]}</div>
+                <div style={{fontSize:16,color:t.muted,marginTop:2,fontFamily:FONT}}>{REF_RANGES[m.key]}</div>
               )}
             </div>
           </div>
@@ -697,38 +699,38 @@ function ReadingDetail({ reading, settings, onClose, onEdit, onDelete }) {
       </div>
       {ldl?.blocked && (
         <div style={{marginTop:10,padding:"10px 13px",background:t.bg,borderRadius:11,
-          border:`1px dashed ${t.border}`,fontSize:13.5,color:t.sec,lineHeight:1.5}}>
+          border:`1px dashed ${t.border}`,fontSize:16.5,color:t.sec,lineHeight:1.5}}>
           {ldl.blockedReason}
         </div>
       )}
-      <div style={{fontSize:13,color:t.muted,margin:"7px 4px 0"}}>
+      <div style={{fontSize:16,color:t.muted,margin:"7px 4px 0"}}>
         Reference values are general guidance, not a diagnosis.
       </div>
       {settings.lpa && (
         <div style={{marginTop:12,padding:"11px 14px",background:t.bg,borderRadius:13,
           border:`1px dashed ${t.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div>
-            <div style={{fontSize:14.5,color:t.text}}>Lp(a)</div>
-            <div style={{fontSize:13,color:t.muted,marginTop:1}}>Genetic baseline · persistent</div>
+            <div style={{fontSize:17.5,color:t.text}}>Lp(a)</div>
+            <div style={{fontSize:16,color:t.muted,marginTop:1}}>Genetic baseline · persistent</div>
           </div>
-          <span style={{fontSize:17,fontWeight:600,color:t.text,fontFamily:MONO}}>
+          <span style={{fontSize:19,fontWeight:600,color:t.text,fontFamily:MONO}}>
             {settings.lpa} {settings.lpaUnit}</span>
         </div>
       )}
       {reading.notes && (
         <div style={{marginTop:12,padding:"11px 14px",background:t.bg,borderRadius:13,border:`1px solid ${t.border}`}}>
-          <div style={{fontSize:13,fontWeight:600,color:t.sec,letterSpacing:".4px",
+          <div style={{fontSize:16,fontWeight:600,color:t.sec,letterSpacing:".4px",
             textTransform:"uppercase",marginBottom:5}}>Notes</div>
-          <div style={{fontSize:15.5,color:t.text,lineHeight:1.55}}>{reading.notes}</div>
+          <div style={{fontSize:18,color:t.text,lineHeight:1.55}}>{reading.notes}</div>
         </div>
       )}
       <div style={{display:"flex",gap:10,marginTop:16}}>
         <button onClick={onEdit} style={{flex:1,padding:"12px",borderRadius:10,border:"none",
-          cursor:"pointer",background:t.accent,color:t.accentText,fontWeight:700,fontSize:17,fontFamily:FONT}}>
+          cursor:"pointer",background:t.accent,color:t.accentText,fontWeight:700,fontSize:19,fontFamily:FONT}}>
           Edit</button>
         <button onClick={()=>setConfirm(true)} style={{flex:1,padding:"12px",borderRadius:10,fontFamily:FONT,
           cursor:"pointer",background:t.dangerBg,color:t.danger,border:`1px solid ${t.danger}33`,
-          fontWeight:600,fontSize:17,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
+          fontWeight:600,fontSize:19,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
           <Trash2 size={14} /> Delete</button>
       </div>
       {confirm && (
@@ -757,8 +759,8 @@ function SelectSheet({ title, options, current, onSelect, onClose, footer }) {
               alignItems:"center",gap:12,background:t.card,transition:"background .1s",
               borderBottom:i<options.length-1?`1px solid ${t.border}`:"none"}}>
             <div>
-              <div style={{fontSize:16.5,color:t.text,fontWeight:o.value===current?700:500}}>{o.label}</div>
-              {o.sub && <div style={{fontSize:13.5,color:t.sec,marginTop:2}}>{o.sub}</div>}
+              <div style={{fontSize:18.5,color:t.text,fontWeight:o.value===current?700:500}}>{o.label}</div>
+              {o.sub && <div style={{fontSize:16.5,color:t.sec,marginTop:2}}>{o.sub}</div>}
             </div>
             {o.value===current && <Check size={17} color={t.text} style={{flexShrink:0}} />}
           </div>
@@ -767,9 +769,9 @@ function SelectSheet({ title, options, current, onSelect, onClose, footer }) {
       {footer && (
         <div style={{marginTop:14,padding:"12px 14px",background:t.bg,borderRadius:10,
           border:`1px solid ${t.border}`}}>
-          <div style={{fontSize:13,fontWeight:600,color:t.sec,letterSpacing:".4px",
+          <div style={{fontSize:16,fontWeight:600,color:t.sec,letterSpacing:".4px",
             textTransform:"uppercase",marginBottom:6}}>How these work</div>
-          <div style={{fontSize:14,color:t.sec,lineHeight:1.6}}>{footer}</div>
+          <div style={{fontSize:17,color:t.sec,lineHeight:1.6}}>{footer}</div>
         </div>
       )}
     </div>
@@ -818,7 +820,7 @@ function NumberPadSheet({ fields, values, activeKey, setActiveKey, onInput, onCl
 
   const KEYS = ["1","2","3","4","5","6","7","8","9",".","0","del"];
   const keyBtn = { border:`1px solid ${t.border}`,background:t.bg,borderRadius:11,height:52,
-    fontSize:23,fontWeight:600,fontFamily:MONO,color:t.text,cursor:"pointer",
+    fontSize:24,fontWeight:600,fontFamily:MONO,color:t.text,cursor:"pointer",
     display:"flex",alignItems:"center",justifyContent:"center" };
 
   return (
@@ -834,13 +836,13 @@ function NumberPadSheet({ fields, values, activeKey, setActiveKey, onInput, onCl
         <div style={{position:"relative",marginBottom:14}}>
           <button onClick={close} style={{position:"absolute",top:0,right:0,padding:"6px 10px",
             borderRadius:8,border:"none",background:"transparent",color:t.sec,fontWeight:600,
-            fontSize:15,cursor:"pointer",fontFamily:FONT}}>Done</button>
+            fontSize:17.5,cursor:"pointer",fontFamily:FONT}}>Done</button>
           <div style={{textAlign:"center",paddingTop:4}}>
-            <div style={{fontSize:13.5,color:t.sec,fontWeight:600,letterSpacing:".3px"}}>{field.label}</div>
+            <div style={{fontSize:16.5,color:t.sec,fontWeight:600,letterSpacing:".3px"}}>{field.label}</div>
             <div style={{fontSize:44,fontWeight:700,fontFamily:MONO,color:t.text,lineHeight:1.1,
               marginTop:3}}>
               {val===""?<span style={{color:t.muted}}>0</span>:val}
-              <span style={{fontSize:16,color:t.muted,marginLeft:7,fontFamily:FONT,fontWeight:500}}>mg/dL</span>
+              <span style={{fontSize:18,color:t.muted,marginLeft:7,fontFamily:FONT,fontWeight:500}}>mg/dL</span>
             </div>
           </div>
         </div>
@@ -854,11 +856,11 @@ function NumberPadSheet({ fields, values, activeKey, setActiveKey, onInput, onCl
         <div style={{display:"flex",gap:8}}>
           <button onClick={goPrev} disabled={idx<=0}
             style={{flex:1,padding:"11px",borderRadius:10,border:`1px solid ${t.border}`,
-              background:"transparent",color:t.text,fontWeight:600,fontSize:15.5,fontFamily:FONT,
+              background:"transparent",color:t.text,fontWeight:600,fontSize:18,fontFamily:FONT,
               cursor:idx<=0?"default":"pointer",opacity:idx<=0?.35:1}}>‹ Previous</button>
           <button onClick={goNext}
             style={{flex:1,padding:"11px",borderRadius:10,border:"none",background:t.accent,
-              color:t.accentText,fontWeight:700,fontSize:15.5,fontFamily:FONT,cursor:"pointer"}}>
+              color:t.accentText,fontWeight:700,fontSize:18,fontFamily:FONT,cursor:"pointer"}}>
             {idx<fields.length-1 ? "Next ›" : "Done"}</button>
         </div>
       </div>
@@ -952,8 +954,8 @@ function AddEditModal({ reading, settings, onSave, onClose }) {
   };
 
   const iS = { width:"100%",padding:"11px 13px",borderRadius:9,border:`1px solid ${t.border}`,
-    background:t.bg,fontSize:17,outline:"none",boxSizing:"border-box",fontFamily:FONT,color:t.text };
-  const lS = { fontSize:14.5,fontWeight:500,color:t.sec,display:"block",marginBottom:6 };
+    background:t.bg,fontSize:19,outline:"none",boxSizing:"border-box",fontFamily:FONT,color:t.text };
+  const lS = { fontSize:17.5,fontWeight:500,color:t.sec,display:"block",marginBottom:6 };
   const noWheel = e => e.currentTarget.blur();
 
   return (
@@ -963,14 +965,14 @@ function AddEditModal({ reading, settings, onSave, onClose }) {
         {errors.length>0 && (
           <div style={{background:t.dangerBg,border:`1px solid ${t.danger}44`,borderRadius:9,
             padding:"10px 14px",marginBottom:14}}>
-            {errors.map((e,i)=><div key={i} style={{fontSize:14.5,color:t.danger}}>{e}</div>)}
+            {errors.map((e,i)=><div key={i} style={{fontSize:17.5,color:t.danger}}>{e}</div>)}
           </div>
         )}
         {warnings.length>0 && (
           <div style={{background:t.warnBg,border:`1px solid ${t.warn}44`,borderRadius:9,
             padding:"10px 14px",marginBottom:14}}>
-            <div style={{fontSize:13.5,fontWeight:600,color:t.warn,marginBottom:3}}>Heads up: you can still save</div>
-            {warnings.map((w,i)=><div key={i} style={{fontSize:14.5,color:t.warn}}>{w}</div>)}
+            <div style={{fontSize:16.5,fontWeight:600,color:t.warn,marginBottom:3}}>Heads up: you can still save</div>
+            {warnings.map((w,i)=><div key={i} style={{fontSize:17.5,color:t.warn}}>{w}</div>)}
           </div>
         )}
         <div style={{display:"flex",flexDirection:"column",gap:15}}>
@@ -983,7 +985,7 @@ function AddEditModal({ reading, settings, onSave, onClose }) {
             <div style={{display:"flex",gap:8}}>
               {[["POC","Home Test"],["Lab","Lab Test"]].map(([v,lbl])=>(
                 <button key={v} onClick={()=>setSource(v)} style={{flex:1,padding:"11px",borderRadius:9,
-                  fontFamily:FONT,fontWeight:600,fontSize:16,cursor:"pointer",
+                  fontFamily:FONT,fontWeight:600,fontSize:18,cursor:"pointer",
                   border:`1px solid ${f.source===v?t.accent:t.border}`,
                   background:f.source===v?t.accent:t.bg,
                   color:f.source===v?t.accentText:t.sec}}>{lbl}</button>
@@ -1003,7 +1005,7 @@ function AddEditModal({ reading, settings, onSave, onClose }) {
               <div key={k}>
                 <label style={lS}>{lbl}</label>
                 <div onClick={()=>setPadField(k)} style={{padding:"11px 13px",borderRadius:9,
-                  border:`1px solid ${padField===k?t.accent:t.border}`,background:t.bg,fontSize:17,
+                  border:`1px solid ${padField===k?t.accent:t.border}`,background:t.bg,fontSize:19,
                   fontFamily:FONT,cursor:"pointer",minHeight:43,display:"flex",alignItems:"center",
                   color:(f[k]!==""&&f[k]!=null)?t.text:t.muted}}>
                   {(f[k]!==""&&f[k]!=null) ? f[k] : "mg/dL"}
@@ -1016,7 +1018,7 @@ function AddEditModal({ reading, settings, onSave, onClose }) {
               <label style={lS}>ApoB (Lab Measured, optional)</label>
               <div onClick={()=>setPadField("apobMeasured")} style={{padding:"11px 13px",borderRadius:9,
                 border:`1px solid ${padField==="apobMeasured"?t.accent:t.border}`,background:t.bg,
-                fontSize:17,fontFamily:FONT,cursor:"pointer",minHeight:43,display:"flex",
+                fontSize:19,fontFamily:FONT,cursor:"pointer",minHeight:43,display:"flex",
                 alignItems:"center",color:(f.apobMeasured!==""&&f.apobMeasured!=null)?t.text:t.muted}}>
                 {(f.apobMeasured!==""&&f.apobMeasured!=null) ? f.apobMeasured : "mg/dL"}
               </div>
@@ -1033,18 +1035,18 @@ function AddEditModal({ reading, settings, onSave, onClose }) {
             if (!rows.length) return null;
             return (
               <div style={{background:t.bg,borderRadius:10,border:`1px solid ${t.border}`,padding:"0 14px 7px"}}>
-                <div style={{fontSize:13,fontWeight:600,color:t.sec,letterSpacing:".5px",
+                <div style={{fontSize:16,fontWeight:600,color:t.sec,letterSpacing:".5px",
                   textTransform:"uppercase",padding:"13px 0 5px"}}>Calculated Preview</div>
                 {rows.map((x,i)=>(
                   <div key={i} style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",
                     gap:14,padding:"10px 0",borderTop:`1px solid ${t.border}`}}>
-                    <div style={{fontSize:14.5,minWidth:0}}>
+                    <div style={{fontSize:17.5,minWidth:0}}>
                       <span style={{color:t.text,fontWeight:600}}>{x.name}</span>
                       {x.method && <span style={{color:t.muted}}> · {x.method}</span>}
                     </div>
                     <div style={{flexShrink:0,display:"flex",alignItems:"baseline",gap:4}}>
-                      <span style={{fontSize:20,fontWeight:700,fontFamily:MONO,color:x.color}}>{x.value}</span>
-                      {x.unit && <span style={{fontSize:13,fontWeight:600,color:t.muted}}>{x.unit}</span>}
+                      <span style={{fontSize:21,fontWeight:700,fontFamily:MONO,color:x.color}}>{x.value}</span>
+                      {x.unit && <span style={{fontSize:16,fontWeight:600,color:t.muted}}>{x.unit}</span>}
                     </div>
                   </div>
                 ))}
@@ -1054,7 +1056,7 @@ function AddEditModal({ reading, settings, onSave, onClose }) {
           <div>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
               <label htmlFor="ll-notes" style={lS}>Notes</label>
-              <span style={{fontSize:13.5,color:t.muted}}>{f.notes.length}/300</span>
+              <span style={{fontSize:16.5,color:t.muted}}>{f.notes.length}/300</span>
             </div>
             <textarea id="ll-notes" value={f.notes} onChange={e=>set("notes",e.target.value.slice(0,300))}
               rows={3} placeholder="Optional: medication changes, fasting status, context…"
@@ -1066,7 +1068,7 @@ function AddEditModal({ reading, settings, onSave, onClose }) {
         padding:"12px 22px 14px",borderTop:`1px solid ${t.border}`}}>
         <button onClick={handleSave} style={{width:"100%",padding:"14px",borderRadius:12,
           border:"none",cursor:"pointer",background:t.accent,color:t.accentText,
-          fontWeight:700,fontSize:17.5,fontFamily:FONT}}>
+          fontWeight:700,fontSize:19,fontFamily:FONT}}>
           {reading?"Save Changes":"Save Reading"}</button>
       </div>
       {devicePicker && (
@@ -1115,7 +1117,7 @@ function StatCard({ label, value, unit, provenance, color, trend, lowerBetter, o
        source, which is what actually explains the number. */
     const col = trend.crossSource ? t.sec : (favorable ? t.success : t.sec);
     trendEl = (
-      <span style={{fontSize:12,fontWeight:600,fontFamily:MONO,color:col,
+      <span style={{fontSize:16,fontWeight:600,fontFamily:MONO,color:col,
         whiteSpace:"nowrap",flexShrink:0}}>
         {up?"▲":"▼"}{Math.abs(trend.delta)}
       </span>
@@ -1130,28 +1132,25 @@ function StatCard({ label, value, unit, provenance, color, trend, lowerBetter, o
     <button onClick={onPress} aria-label={`${label}: choose which metric to show here`}
       onMouseEnter={e=>e.currentTarget.style.background=t.cardHi}
       onMouseLeave={e=>e.currentTarget.style.background=t.card}
-      style={{background:t.card,borderRadius:13,padding:"13px 9px",minWidth:0,textAlign:"left",
+      style={{background:t.card,borderRadius:13,padding:"13px 13px",width:"100%",textAlign:"left",
         fontFamily:FONT,cursor:"pointer",transition:"background .1s",
         border:`1px solid ${t.border}`,borderTop:`2px solid ${color}`}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",
         gap:4,marginBottom:7}}>
         <span style={{display:"flex",alignItems:"center",gap:1,minWidth:0,flex:"1 1 auto"}}>
-          <span style={{fontSize:12,color:t.sec,fontWeight:700,letterSpacing:"0.1px",
+          <span style={{fontSize:16,color:t.sec,fontWeight:700,letterSpacing:"0.1px",
             overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{label}</span>
           <ChevronDown size={10} color={t.muted} style={{flexShrink:0,marginTop:1}} />
         </span>
         {trendEl}
       </div>
-      <div style={{fontSize:28,fontWeight:800,color:value==null?t.muted:t.text,fontFamily:MONO,
+      <div style={{fontSize:30,fontWeight:800,color:value==null?t.muted:t.text,fontFamily:MONO,
         fontVariantNumeric:"tabular-nums",lineHeight:1,overflow:"hidden",
         textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{value==null ? "—" : value}</div>
-      {/* Two lines, not one: at three-across on a phone there is no room to
-          run the method and the comparison together, and the comparison is the
-          half that stops the delta above from being an unqualified number. */}
-      <div style={{fontSize:12.5,color:t.sec,marginTop:5,overflow:"hidden",
+      <div style={{fontSize:16,color:t.sec,marginTop:6,overflow:"hidden",
         textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{provenance}</div>
       {since && (
-        <div style={{fontSize:12.5,color:t.sec,marginTop:1,overflow:"hidden",
+        <div style={{fontSize:16,color:t.sec,marginTop:2,overflow:"hidden",
           textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{since}</div>
       )}
     </button>
@@ -1178,8 +1177,8 @@ function DashboardView({ enriched, settings, onUpdateSettings, onSelect, onAdd, 
       justifyContent:"space-between",gap:8,padding:"8px 13px",borderRadius:10,
       border:`1px solid ${t.border}`,background:t.bg,cursor:"pointer",fontFamily:FONT}}>
       <span style={{display:"flex",flexDirection:"column",alignItems:"flex-start",minWidth:0}}>
-        <span style={{fontSize:11.5,color:t.muted,fontWeight:700,letterSpacing:".5px"}}>{caption}</span>
-        <span style={{fontSize:16.5,fontWeight:700,color:t.text,overflow:"hidden",
+        <span style={{fontSize:16,color:t.muted,fontWeight:700,letterSpacing:".5px"}}>{caption}</span>
+        <span style={{fontSize:18.5,fontWeight:700,color:t.text,overflow:"hidden",
           textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%"}}>{value}</span>
       </span>
       <ChevronDown size={15} color={t.sec} style={{flexShrink:0}} />
@@ -1299,15 +1298,18 @@ function DashboardView({ enriched, settings, onUpdateSettings, onSelect, onAdd, 
   return (
     <div style={{paddingBottom:16}}>
       {enriched.length>0 && (
-        <div style={{marginTop:16,display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+        <div style={{marginTop:16,display:"flex",gap:8,overflowX:"auto",paddingBottom:4,
+          scrollSnapType:"x mandatory",WebkitOverflowScrolling:"touch"}}>
           {cardKeys.map((key,idx)=>{
             const bm = BM(key), found = latestFor(key);
             return (
-              <StatCard key={idx} label={bm?.label ?? key}
+              <div key={idx} style={{flex:"0 0 158px",scrollSnapAlign:"start"}}>
+              <StatCard label={bm?.label ?? key}
                 value={found?.value ?? null}
                 provenance={found ? provenanceFor(key, found.reading) : "No readings yet"}
                 color={bm?.color} trend={found ? trendFor(key) : null}
                 lowerBetter={bm?.lowerBetter} onPress={()=>setCardPicker(idx)} />
+              </div>
             );
           })}
         </div>
@@ -1326,12 +1328,12 @@ function DashboardView({ enriched, settings, onUpdateSettings, onSelect, onAdd, 
             flexWrap:"wrap",rowGap:6}}>
             <div style={{display:"flex",alignItems:"center",gap:5}}>
               <div style={{width:18,height:2,background:a?.color,borderRadius:1}} />
-              <span style={{fontSize:13,color:t.sec}}>{a?.label} (left)</span>
+              <span style={{fontSize:16,color:t.sec}}>{a?.label} (left)</span>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:5}}>
               <svg width="18" height="2"><line x1="0" y1="1" x2="18" y2="1"
                 stroke={b?.color} strokeWidth="2" strokeDasharray="4 2"/></svg>
-              <span style={{fontSize:13,color:t.sec}}>{b?.label} (right)</span>
+              <span style={{fontSize:16,color:t.sec}}>{b?.label} (right)</span>
             </div>
           </div>
         )}
@@ -1340,7 +1342,7 @@ function DashboardView({ enriched, settings, onUpdateSettings, onSelect, onAdd, 
           <div style={{height:216,display:"flex",flexDirection:"column",alignItems:"center",
             justifyContent:"center",color:t.muted,gap:8}}>
             <Activity size={26} strokeWidth={1.5} />
-            <div style={{fontSize:15.5,color:t.sec,textAlign:"center",padding:"0 20px"}}>
+            <div style={{fontSize:18,color:t.sec,textAlign:"center",padding:"0 20px"}}>
               {enriched.length===0 ? "Add 2+ readings to see a trend"
                 : `Not enough ${a?.label} data for this range and filter`}
             </div>
@@ -1351,15 +1353,15 @@ function DashboardView({ enriched, settings, onUpdateSettings, onSelect, onAdd, 
               <LineChart data={chartData} margin={{top:14,right:10,bottom:6,left:4}}>
                 <CartesianGrid strokeDasharray="3 3" stroke={t.grid} vertical={false} />
                 <XAxis dataKey="t" type="number" scale="time" domain={["dataMin","dataMax"]}
-                  tickFormatter={fmtShort} tick={{fontSize:12.5,fill:t.sec,fontFamily:FONT}}
+                  tickFormatter={fmtShort} tick={{fontSize:16,fill:t.sec,fontFamily:FONT}}
                   tickLine={false} axisLine={false} interval="preserveStartEnd"
                   minTickGap={34} tickMargin={10} />
-                <YAxis yAxisId="left" tick={{fontSize:12.5,fill:bmB?(a?.color):t.sec,fontFamily:FONT}}
+                <YAxis yAxisId="left" tick={{fontSize:16,fill:bmB?(a?.color):t.sec,fontFamily:FONT}}
                   tickLine={false} axisLine={false} domain={["auto","auto"]}
                   width={40} tickMargin={6} padding={{top:6,bottom:6}} />
                 {bmB && (
                   <YAxis yAxisId="right" orientation="right" domain={["auto","auto"]} width={36}
-                    tick={{fontSize:12.5,fill:b?.color,fontFamily:FONT}} tickLine={false}
+                    tick={{fontSize:16,fill:b?.color,fontFamily:FONT}} tickLine={false}
                     axisLine={false} tickMargin={6} padding={{top:6,bottom:6}} />
                 )}
                 <Tooltip content={<ChartTooltip bmA={bmA} bmB={bmB} />}
@@ -1384,7 +1386,7 @@ function DashboardView({ enriched, settings, onUpdateSettings, onSelect, onAdd, 
               </LineChart>
             </ResponsiveContainer>
             {(fit || bucketed) && (
-              <div style={{fontSize:13,color:t.sec,textAlign:"center",marginTop:4,lineHeight:1.5}}>
+              <div style={{fontSize:16,color:t.sec,textAlign:"center",marginTop:4,lineHeight:1.5}}>
                 {fit && `Trend ${fit.change >= 0 ? "+" : "−"}${Math.abs(fit.change)}${a?.unit ? ` ${a.unit}` : ""} over ${fmtSpan(fit.days)}`}
                 {fit && bucketed && " · "}
                 {bucketed && `${original} readings averaged`}
@@ -1399,11 +1401,11 @@ function DashboardView({ enriched, settings, onUpdateSettings, onSelect, onAdd, 
       </div>
 
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",margin:"22px 4px 8px"}}>
-        <span style={{fontSize:13,fontWeight:600,color:t.sec,textTransform:"uppercase",letterSpacing:".6px"}}>
+        <span style={{fontSize:16,fontWeight:600,color:t.sec,textTransform:"uppercase",letterSpacing:".6px"}}>
           Recent Readings</span>
         {enriched.length>0 && (
           <button onClick={onViewAll} style={{background:"none",border:"none",cursor:"pointer",
-            color:t.text,fontSize:14,fontWeight:600,fontFamily:FONT,display:"flex",alignItems:"center",gap:1}}>
+            color:t.text,fontSize:17,fontWeight:600,fontFamily:FONT,display:"flex",alignItems:"center",gap:1}}>
             View All <ChevronRight size={13} /></button>
         )}
       </div>
@@ -1413,11 +1415,11 @@ function DashboardView({ enriched, settings, onUpdateSettings, onSelect, onAdd, 
           <div style={{display:"flex",justifyContent:"center",marginBottom:12}}>
             <Activity size={30} strokeWidth={1.5} color={t.muted} />
           </div>
-          <div style={{fontSize:17.5,fontWeight:600,color:t.text,marginBottom:6}}>No readings yet</div>
-          <div style={{fontSize:15.5,color:t.sec,marginBottom:20}}>
+          <div style={{fontSize:19,fontWeight:600,color:t.text,marginBottom:6}}>No readings yet</div>
+          <div style={{fontSize:18,color:t.sec,marginBottom:20}}>
             Add your first cholesterol reading to get started</div>
           <button onClick={onAdd} style={{padding:"11px 22px",borderRadius:9,border:"none",
-            background:t.accent,color:t.accentText,fontWeight:700,fontSize:16.5,cursor:"pointer",fontFamily:FONT}}>
+            background:t.accent,color:t.accentText,fontWeight:700,fontSize:18.5,cursor:"pointer",fontFamily:FONT}}>
             Add First Reading</button>
         </div>
       ) : (
@@ -1483,7 +1485,7 @@ function HistoryView({ enriched, settings, onSelect }) {
       </div>
       {groups.length===0 ? (
         <div style={{background:t.card,borderRadius:13,padding:"30px 20px",textAlign:"center",
-          color:t.sec,fontSize:15.5,border:`1px solid ${t.border}`}}>
+          color:t.sec,fontSize:18,border:`1px solid ${t.border}`}}>
           {enriched.length===0 ? "No readings recorded yet"
             : srcMode==="home" ? "No home-test readings"
             : "No lab readings"}
@@ -1497,8 +1499,8 @@ function HistoryView({ enriched, settings, onSelect }) {
               borderRadius:collapsed?11:"11px 11px 0 0",borderBottom:collapsed?`1px solid ${t.border}`:"none"}}>
               <ChevronRight size={14} color={t.sec} strokeWidth={2.5}
                 style={{transform:collapsed?"none":"rotate(90deg)",transition:"transform .15s"}} />
-              <span style={{fontSize:15.5,fontWeight:600,color:t.text,flex:1}}>{month}</span>
-              <span style={{fontSize:13.5,color:t.sec,fontFamily:MONO}}>{rows.length}</span>
+              <span style={{fontSize:18,fontWeight:600,color:t.text,flex:1}}>{month}</span>
+              <span style={{fontSize:16.5,color:t.sec,fontFamily:MONO}}>{rows.length}</span>
             </div>
             {!collapsed && (
               <div style={{background:t.card,borderRadius:"0 0 11px 11px",overflow:"hidden",
@@ -1544,12 +1546,12 @@ function ReportView({ enriched, settings, onClose }) {
   const srcLabel = {all:"All sources",home:"Home tests only",lab:"Lab tests only"}[srcMode];
   const bmInfo = BM(chartBm);
 
-  const tableCell = { padding:"6px 8px",fontSize:13,borderBottom:`1px solid ${L.border}`,
+  const tableCell = { padding:"6px 8px",fontSize:16,borderBottom:`1px solid ${L.border}`,
     fontFamily:MONO,color:L.text,textAlign:"right" };
-  const tableHd = { padding:"6px 8px",fontSize:12,fontWeight:700,textTransform:"uppercase",
+  const tableHd = { padding:"6px 8px",fontSize:16,fontWeight:700,textTransform:"uppercase",
     letterSpacing:"0.4px",color:L.sec,textAlign:"right",borderBottom:`1.5px solid ${L.borderHi}` };
   const ctrlBtn = (on)=>({ padding:"5px 11px",border:`1px solid ${on?"#18181B":"rgba(255,255,255,0.25)"}`,
-    borderRadius:7,cursor:"pointer",fontFamily:FONT,fontSize:14,fontWeight:on?700:500,
+    borderRadius:7,cursor:"pointer",fontFamily:FONT,fontSize:17,fontWeight:on?700:500,
     background:on?"#18181B":"transparent",color:on?"#fff":"#C7C7CC" });
 
   return (
@@ -1562,7 +1564,7 @@ function ReportView({ enriched, settings, onClose }) {
         <button onClick={onClose} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.2)",
           borderRadius:18,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",
           cursor:"pointer",color:"#C7C7CC"}}><X size={15} /></button>
-        <span style={{fontSize:16,fontWeight:700,color:"#FAFAFA",marginRight:4}}>Report</span>
+        <span style={{fontSize:18,fontWeight:700,color:"#FAFAFA",marginRight:4}}>Report</span>
         <div style={{display:"flex",gap:4}}>
           {RANGES.map(r=><button key={r} onClick={()=>setRange(r)} style={ctrlBtn(range===r)}>{r}</button>)}
         </div>
@@ -1572,10 +1574,10 @@ function ReportView({ enriched, settings, onClose }) {
         </div>
         <button onClick={()=>window.print()} style={{marginLeft:"auto",padding:"7px 16px",
           borderRadius:8,border:"none",background:"#FAFAFA",color:"#18181B",fontWeight:700,
-          fontSize:15,cursor:"pointer",fontFamily:FONT,display:"flex",alignItems:"center",gap:6}}>
+          fontSize:17.5,cursor:"pointer",fontFamily:FONT,display:"flex",alignItems:"center",gap:6}}>
           <Download size={14} /> Save as PDF</button>
       </div>
-      <div style={{textAlign:"center",fontSize:13,color:"#8A8A93",padding:"8px 16px 0"}}
+      <div style={{textAlign:"center",fontSize:16,color:"#8A8A93",padding:"8px 16px 0"}}
         className="ll-noprint">
         "Save as PDF" opens your browser's print dialog. Choose "Save as PDF" as the destination.
       </div>
@@ -1588,22 +1590,22 @@ function ReportView({ enriched, settings, onClose }) {
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",
             borderBottom:`2px solid ${L.text}`,paddingBottom:14,marginBottom:20}}>
             <div>
-              <div style={{fontSize:24,fontWeight:800,letterSpacing:"-0.5px"}}>Lipid Report</div>
-              <div style={{fontSize:14,color:L.sec,marginTop:3}}>{rangeLabel} · {srcLabel}</div>
+              <div style={{fontSize:25,fontWeight:800,letterSpacing:"-0.5px"}}>Lipid Report</div>
+              <div style={{fontSize:17,color:L.sec,marginTop:3}}>{rangeLabel} · {srcLabel}</div>
             </div>
-            <div style={{textAlign:"right",fontSize:13,color:L.sec}}>
+            <div style={{textAlign:"right",fontSize:16,color:L.sec}}>
               <div>Generated</div>
               <div style={{fontWeight:600,color:L.text}}>{fmtDate(new Date().toISOString())}</div>
             </div>
           </div>
 
           {scoped.length===0 ? (
-            <div style={{padding:"40px 0",textAlign:"center",color:L.sec,fontSize:15}}>
+            <div style={{padding:"40px 0",textAlign:"center",color:L.sec,fontSize:17.5}}>
               No readings fall within this range and filter.
             </div>
           ) : (
             <>
-              <div style={{fontSize:13,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",
+              <div style={{fontSize:16,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",
                 color:L.sec,marginBottom:8}}>Summary · {scoped.length} reading{scoped.length>1?"s":""}</div>
               <table style={{width:"100%",borderCollapse:"collapse",marginBottom:24}}>
                 <thead><tr>
@@ -1633,10 +1635,10 @@ function ReportView({ enriched, settings, onClose }) {
               {chartData.length>=2 && (
                 <>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                    <div style={{fontSize:13,fontWeight:700,textTransform:"uppercase",
+                    <div style={{fontSize:16,fontWeight:700,textTransform:"uppercase",
                       letterSpacing:"0.5px",color:L.sec}}>{REPORT_BM_LABEL[chartBm]} Trend</div>
                     <select value={chartBm} onChange={e=>setChartBm(e.target.value)}
-                      className="ll-noprint" style={{fontSize:13,padding:"3px 6px",borderRadius:6,
+                      className="ll-noprint" style={{fontSize:16,padding:"3px 6px",borderRadius:6,
                         border:`1px solid ${L.border}`,fontFamily:FONT}}>
                       {REPORT_BMS.map(k=><option key={k} value={k}>{REPORT_BM_LABEL[k]}</option>)}
                     </select>
@@ -1645,10 +1647,10 @@ function ReportView({ enriched, settings, onClose }) {
                     <LineChart width={632} height={220} data={chartData}
                       margin={{top:10,right:14,bottom:6,left:6}}>
                       <CartesianGrid strokeDasharray="3 3" stroke={L.grid} />
-                      <XAxis dataKey="date" tick={{fontSize:11.5,fill:L.sec,fontFamily:FONT}}
+                      <XAxis dataKey="date" tick={{fontSize:16,fill:L.sec,fontFamily:FONT}}
                         tickLine={false} axisLine={{stroke:L.border}} interval="preserveStartEnd"
                         minTickGap={40} tickMargin={8} />
-                      <YAxis tick={{fontSize:11.5,fill:L.sec,fontFamily:FONT}} tickLine={false}
+                      <YAxis tick={{fontSize:16,fill:L.sec,fontFamily:FONT}} tickLine={false}
                         axisLine={{stroke:L.border}} width={42} tickMargin={6}
                         domain={["auto","auto"]} padding={{top:6,bottom:6}} />
                       <Line type="monotone" dataKey="v" stroke={bmInfo?.color} strokeWidth={2}
@@ -1658,7 +1660,7 @@ function ReportView({ enriched, settings, onClose }) {
                 </>
               )}
 
-              <div style={{fontSize:13,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",
+              <div style={{fontSize:16,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",
                 color:L.sec,marginBottom:8}}>Readings</div>
               <table style={{width:"100%",borderCollapse:"collapse",marginBottom:24}}>
                 <thead><tr>
@@ -1688,7 +1690,7 @@ function ReportView({ enriched, settings, onClose }) {
             </>
           )}
 
-          <div style={{borderTop:`1px solid ${L.border}`,paddingTop:12,fontSize:12,
+          <div style={{borderTop:`1px solid ${L.border}`,paddingTop:12,fontSize:16,
             color:L.muted,lineHeight:1.5}}>
             Generated by LipidLog. For informational purposes only. Not a diagnosis and not a
             substitute for professional medical advice. LDL-C shown using the
@@ -1750,18 +1752,18 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
       style={{padding:"13px 15px",display:"flex",justifyContent:"space-between",alignItems:"center",
         cursor:onPress?"pointer":"default",transition:"background .1s"}}>
       <div>
-        <div style={{fontSize:16.5,color:danger?t.danger:t.text}}>{label}</div>
-        {sub && <div style={{fontSize:13.5,color:t.sec,marginTop:2}}>{sub}</div>}
+        <div style={{fontSize:18.5,color:danger?t.danger:t.text}}>{label}</div>
+        {sub && <div style={{fontSize:16.5,color:t.sec,marginTop:2}}>{sub}</div>}
       </div>
       <div style={{display:"flex",alignItems:"center",gap:5}}>
-        {value && <span style={{fontSize:15.5,color:t.sec,fontWeight:600}}>{value}</span>}
+        {value && <span style={{fontSize:18,color:t.sec,fontWeight:600}}>{value}</span>}
         {onPress && <ChevronRight size={13} color={t.muted} />}
       </div>
     </div>
   );
   const card = { background:t.card,borderRadius:13,overflow:"hidden",border:`1px solid ${t.border}` };
   const iS = { padding:"10px 12px",borderRadius:8,border:`1px solid ${t.border}`,
-    background:t.bg,fontSize:17,outline:"none",fontFamily:FONT,color:t.text };
+    background:t.bg,fontSize:19,outline:"none",fontFamily:FONT,color:t.text };
   const ldlL={none:"Off",friedewald:"Friedewald","martin-hopkins":"Martin-Hopkins"};
   const apobL={interheart:"INTERHEART",aggressive:"Aggressive"};
   const themeL={system:"System",light:"Light",dark:"Dark"};
@@ -1795,7 +1797,7 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
           return (
             <div key={pool}>
               <SectionLabel>{title}</SectionLabel>
-              <div style={{fontSize:13.5,color:t.sec,margin:"0 4px 8px",lineHeight:1.5}}>{blurb}</div>
+              <div style={{fontSize:16.5,color:t.sec,margin:"0 4px 8px",lineHeight:1.5}}>{blurb}</div>
               <div style={card}>
                 {list.map((dn,i)=>{
                   const isDefault = defName===dn;
@@ -1813,8 +1815,8 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
                           {isDefault && <div style={{width:8,height:8,borderRadius:5,background:t.accent}} />}
                         </div>
                         <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontSize:16.5,color:t.text}}>{dn}</div>
-                          {isDefault && <div style={{fontSize:13,color:t.sec,marginTop:1}}>Default</div>}
+                          <div style={{fontSize:18.5,color:t.text}}>{dn}</div>
+                          {isDefault && <div style={{fontSize:16,color:t.sec,marginTop:1}}>Default</div>}
                         </div>
                         <div style={{display:"flex",gap:4}}>
                           <button onClick={e=>{e.stopPropagation();setDeviceDialog({mode:"edit",pool,name:dn});}}
@@ -1848,7 +1850,7 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
                   style={{padding:"13px 15px",display:"flex",alignItems:"center",gap:8,
                     cursor:"pointer",transition:"background .1s"}}>
                   <Plus size={15} color={t.text} strokeWidth={2.5} />
-                  <span style={{fontSize:16.5,color:t.text,fontWeight:600}}>
+                  <span style={{fontSize:18.5,color:t.text,fontWeight:600}}>
                     Add {pool==="lab"?"Lab Source":"Device"}</span>
                 </div>
               </div>
@@ -1858,7 +1860,7 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
 
         <SectionLabel>Lp(a) Persistent Value</SectionLabel>
         <div style={{...card,padding:"14px 15px"}}>
-          <div style={{fontSize:13.5,color:t.sec,marginBottom:10,lineHeight:1.55}}>
+          <div style={{fontSize:16.5,color:t.sec,marginBottom:10,lineHeight:1.55}}>
             Lp(a) is genetic and stable over time, so it's stored once here rather than per
             reading. It appears as context on every reading.
           </div>
@@ -1872,19 +1874,19 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
               {["mg/dL","nmol/L"].map(u=>(
                 <button key={u} onClick={()=>onUpdate({...settings,lpaUnit:u})}
                   style={{padding:"9px 10px",border:"none",cursor:"pointer",fontFamily:FONT,
-                    fontSize:14,fontWeight:settings.lpaUnit===u?700:500,whiteSpace:"nowrap",
+                    fontSize:17,fontWeight:settings.lpaUnit===u?700:500,whiteSpace:"nowrap",
                     background:settings.lpaUnit===u?t.cardHi:"transparent",
                     color:settings.lpaUnit===u?t.text:t.sec}}>{u}</button>
               ))}
             </div>
             <button onClick={()=>{onUpdate({...settings,lpa});setLpaSaved(true);}}
               style={{padding:"10px 14px",borderRadius:8,border:"none",cursor:"pointer",
-                flexShrink:0,fontFamily:FONT,fontWeight:700,fontSize:15.5,
+                flexShrink:0,fontFamily:FONT,fontWeight:700,fontSize:18,
                 background:t.accent,color:t.accentText}}>
               Save</button>
           </div>
           {settings.lpa && (
-            <div style={{fontSize:14.5,color:lpaSaved?t.success:t.sec,marginTop:8}}>
+            <div style={{fontSize:17.5,color:lpaSaved?t.success:t.sec,marginTop:8}}>
               {lpaSaved?"Saved · ":"Stored · "}{settings.lpa} {settings.lpaUnit}
             </div>
           )}
@@ -1899,7 +1901,7 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
               alignItems:"center",cursor:"pointer",transition:"background .1s"}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
               <FileText size={15} color={t.text} />
-              <span style={{fontSize:16.5,color:t.text}}>PDF Report</span>
+              <span style={{fontSize:18.5,color:t.text}}>PDF Report</span>
             </div>
             <ChevronRight size={13} color={t.muted} />
           </div>
@@ -1911,9 +1913,9 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
               cursor:enriched.length?"pointer":"default",opacity:enriched.length?1:0.5,transition:"background .1s"}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
               <Download size={15} color={t.text} />
-              <span style={{fontSize:16.5,color:t.text}}>Export CSV</span>
+              <span style={{fontSize:18.5,color:t.text}}>Export CSV</span>
             </div>
-            <span style={{fontSize:14.5,color:t.sec}}>{enriched.length} readings</span>
+            <span style={{fontSize:17.5,color:t.sec}}>{enriched.length} readings</span>
           </div>
         </div>
 
@@ -1925,7 +1927,7 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
 
         <SectionLabel>Legal</SectionLabel>
         <div style={{...card,padding:"13px 15px"}}>
-          <div style={{fontSize:14.5,color:t.sec,lineHeight:1.6}}>
+          <div style={{fontSize:17.5,color:t.sec,lineHeight:1.6}}>
             For informational purposes only. Does not replace professional medical advice.
             Always consult a qualified healthcare provider regarding your cardiovascular health.
           </div>
@@ -2139,7 +2141,7 @@ export default function App() {
 
   if (!loaded) return (
     <div style={{display:"flex",height:"100vh",alignItems:"center",justifyContent:"center",
-      background:t.bg,fontFamily:FONT,color:t.sec,fontSize:17}}>Loading…</div>
+      background:t.bg,fontFamily:FONT,color:t.sec,fontSize:19}}>Loading…</div>
   );
 
   /* No auth gate. The prototype stores readings locally via window.storage,
@@ -2180,7 +2182,7 @@ export default function App() {
           WebkitBackdropFilter:"blur(20px)",borderBottom:`1px solid ${t.border}`,
           padding:"14px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",
           position:"sticky",top:0,zIndex:100}}>
-          <div style={{fontSize:18.5,fontWeight:800,letterSpacing:"-0.4px"}}>LipidLog</div>
+          <div style={{fontSize:20,fontWeight:800,letterSpacing:"-0.4px"}}>LipidLog</div>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             <button onClick={()=>updateSettings({...settings,theme:t.isDark?"light":"dark"})}
               aria-label="Toggle theme" style={{background:"transparent",border:`1px solid ${t.border}`,
@@ -2190,7 +2192,7 @@ export default function App() {
             </button>
             {view!=="settings" && (
               <button onClick={()=>setModal("add")} style={{background:t.accent,color:t.accentText,
-                border:"none",borderRadius:18,padding:"6px 13px 6px 9px",fontSize:15.5,fontWeight:700,
+                border:"none",borderRadius:18,padding:"6px 13px 6px 9px",fontSize:18,fontWeight:700,
                 cursor:"pointer",fontFamily:FONT,display:"flex",alignItems:"center",gap:4}}>
                 <Plus size={15} strokeWidth={2.6} /> Add
               </button>
@@ -2217,7 +2219,7 @@ export default function App() {
               cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,
               padding:"0 20px",fontFamily:FONT,color:view===key?t.text:t.muted,transition:"color .15s"}}>
               <Icon size={21} strokeWidth={view===key?2.4:1.8} />
-              <span style={{fontSize:12.5,fontWeight:view===key?700:500}}>{label}</span>
+              <span style={{fontSize:16,fontWeight:view===key?700:500}}>{label}</span>
             </button>
           ))}
         </nav>
