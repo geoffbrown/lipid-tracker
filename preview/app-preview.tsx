@@ -6,6 +6,8 @@ import { createRoot } from "react-dom/client";
 import DashboardPage from "../app/page";
 import OnboardingPage from "../app/onboarding/page";
 import LoginPage from "../app/login/page";
+import HistoryPage from "../app/history/page";
+import SettingsPage from "../app/settings/page";
 import { SAMPLE_READINGS } from "./sample-readings.js";
 
 /* Seed once, so the dashboard has something to show. Invented data, and the
@@ -38,6 +40,8 @@ function App() {
 
   if (path.startsWith("/onboarding")) return <OnboardingPage />;
   if (path.startsWith("/login")) return <LoginPage />;
+  if (path.startsWith("/history")) return <HistoryPage />;
+  if (path.startsWith("/settings")) return <SettingsPage />;
   return <DashboardPage />;
 }
 

@@ -37,7 +37,8 @@ await build({
   bundle: true, minify: true, format: "iife",
   jsx: "automatic",
   tsconfig: "tsconfig.json",          // resolves the @/* import alias
-  alias: { "next/navigation": "./preview/next-nav-shim.js" },
+  alias: { "next/navigation": "./preview/next-nav-shim.js",
+           "next/link": "./preview/next-link-shim.jsx" },
   define: { "process.env.NODE_ENV": '"production"',
             "process.env.NEXT_PUBLIC_SUPABASE_URL": '""',
             "process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY": '""' },
