@@ -466,6 +466,13 @@ specifies and never had. It requires three points, since with two the fit merely
 retraces the segment already drawn. A caption states it in words: *"Trend −4.2
 mg/dL over 6 months"*, alongside the averaging disclosure when one applies.
 
+**The source filter carries the mark it filters on**, and sits above the chart
+with the other controls that decide what is being looked at. Its Home and Lab
+segments show the same filled dot and ring the chart draws, so one element
+teaches the encoding and filters by it — replacing a separate legend above the
+chart and a filter below it. The time range stays below the chart, next to the
+axis it scopes.
+
 **The stat-card delta says what it measured.** It previously showed a bare
 number: a 7-day change and an 8-month change rendered identically, and a delta
 spanning a home-to-lab transition — mostly method bias — was coloured as

@@ -1174,10 +1174,28 @@ function DashboardView({ enriched, settings, onSelect, onAdd, onViewAll }) {
     </button>
   );
 
+  /* Home and Lab carry the same marks the chart draws, so this control doubles
+     as the legend for them: it teaches the encoding and filters by it in one
+     element, instead of a legend above the chart and a filter below it. */
+  const srcOptions = [
+    { value:"all", label:"All" },
+    { value:"home", label:(
+      <span style={{display:"inline-flex",alignItems:"center",gap:5}}>
+        <svg width="8" height="8"><circle cx="4" cy="4" r="3.4" fill="currentColor" /></svg>
+        Home
+      </span>) },
+    { value:"lab", label:(
+      <span style={{display:"inline-flex",alignItems:"center",gap:5}}>
+        <svg width="8" height="8"><circle cx="4" cy="4" r="2.9" fill="none"
+          stroke="currentColor" strokeWidth="1.6" /></svg>
+        Lab
+      </span>) },
+  ];
+
   const ascending = useMemo(()=>
     [...enriched].sort((x,y)=>new Date(x.timestamp)-new Date(y.timestamp)), [enriched]);
 
-  const { data:chartData, bucketed, original, mixedSources } = useMemo(()=>{
+  const { data:chartData, bucketed, original } = useMemo(()=>{
     const scoped = sourceFilter(rangeFilter(ascending, range), srcMode);
     const rows = scoped.map(r=>({
       /* A real timestamp, not a formatted label. As a category axis every gap
@@ -1188,8 +1206,7 @@ function DashboardView({ enriched, settings, onSelect, onAdd, onViewAll }) {
       ldl:metricValue(r,"ldl",settings.ldlMethod), hdl:r.hdl??null, tc:r.tc??null, tg:r.tg??null,
       apob:r.d.apob??null, tcHdl:r.d.tcHdl??null, tgHdl:r.d.tgHdl??null,
     }));
-    return { ...downsample(rows),
-      mixedSources: rows.some(r=>r.source==="Lab") && rows.some(r=>r.source==="POC") };
+    return downsample(rows);
   },[ascending,range,srcMode,settings.ldlMethod]);
 
   const fit = useMemo(()=>fitTrend(
@@ -1265,35 +1282,21 @@ function DashboardView({ enriched, settings, onSelect, onAdd, onViewAll }) {
           <DropField caption="METRIC" value={a?.label} onClick={()=>setMetricPicker("primary")} />
           <DropField caption="COMPARE" value={bmB?b?.label:"Off"} onClick={()=>setMetricPicker("compare")} />
         </div>
-        {(bmB || (mixedSources && !bucketed)) && (
+        <div style={{marginBottom:bmB?10:12}}>
+          <Segmented options={srcOptions} value={srcMode} onChange={setSrcMode} />
+        </div>
+        {bmB && (
           <div style={{display:"flex",gap:16,marginBottom:10,alignItems:"center",
             flexWrap:"wrap",rowGap:6}}>
-            {bmB && (
-              <>
-                <div style={{display:"flex",alignItems:"center",gap:5}}>
-                  <div style={{width:18,height:2,background:a?.color,borderRadius:1}} />
-                  <span style={{fontSize:11,color:t.sec}}>{a?.label} (left)</span>
-                </div>
-                <div style={{display:"flex",alignItems:"center",gap:5}}>
-                  <svg width="18" height="2"><line x1="0" y1="1" x2="18" y2="1"
-                    stroke={b?.color} strokeWidth="2" strokeDasharray="4 2"/></svg>
-                  <span style={{fontSize:11,color:t.sec}}>{b?.label} (right)</span>
-                </div>
-              </>
-            )}
-            {mixedSources && !bucketed && (
-              <div style={{display:"flex",alignItems:"center",gap:11}}>
-                <span style={{display:"flex",alignItems:"center",gap:5}}>
-                  <svg width="9" height="9"><circle cx="4.5" cy="4.5" r="3.4" fill={t.sec} /></svg>
-                  <span style={{fontSize:11,color:t.sec}}>Home</span>
-                </span>
-                <span style={{display:"flex",alignItems:"center",gap:5}}>
-                  <svg width="9" height="9"><circle cx="4.5" cy="4.5" r="3" fill={t.card}
-                    stroke={t.sec} strokeWidth="1.6" /></svg>
-                  <span style={{fontSize:11,color:t.sec}}>Lab</span>
-                </span>
-              </div>
-            )}
+            <div style={{display:"flex",alignItems:"center",gap:5}}>
+              <div style={{width:18,height:2,background:a?.color,borderRadius:1}} />
+              <span style={{fontSize:11,color:t.sec}}>{a?.label} (left)</span>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:5}}>
+              <svg width="18" height="2"><line x1="0" y1="1" x2="18" y2="1"
+                stroke={b?.color} strokeWidth="2" strokeDasharray="4 2"/></svg>
+              <span style={{fontSize:11,color:t.sec}}>{b?.label} (right)</span>
+            </div>
           </div>
         )}
 
@@ -1354,9 +1357,7 @@ function DashboardView({ enriched, settings, onSelect, onAdd, onViewAll }) {
           </>
         )}
 
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",
-          marginTop:12,gap:8,flexWrap:"wrap"}}>
-          <Segmented options={SRC_MODES} value={srcMode} onChange={setSrcMode} />
+        <div style={{display:"flex",justifyContent:"center",marginTop:12}}>
           <Segmented options={RANGES} value={range} onChange={setRange} />
         </div>
       </div>
