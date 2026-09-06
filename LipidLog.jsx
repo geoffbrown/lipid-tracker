@@ -1122,10 +1122,10 @@ function StatCard({ label, value, provenance, color, trend, lowerBetter }) {
   /* "since Aug 12" turns an unqualified number into a measured claim: a 7-day
      delta and an 8-month delta previously rendered identically. */
   const since = trend
-    ? (trend.crossSource ? `vs ${trend.prevSource} ${fmtShort(trend.since)}` : `since ${fmtShort(trend.since)}`)
+    ? (trend.crossSource ? `vs ${trend.prevSource} · ${fmtShort(trend.since)}` : `since ${fmtShort(trend.since)}`)
     : null;
   return (
-    <div style={{background:t.card,borderRadius:13,padding:"13px 14px",
+    <div style={{background:t.card,borderRadius:13,padding:"13px 14px",minWidth:0,
       border:`1px solid ${t.border}`,borderTop:`2px solid ${color}`}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:7}}>
         <span style={{fontSize:11,color:t.sec,fontWeight:600}}>{label}</span>
@@ -1133,10 +1133,15 @@ function StatCard({ label, value, provenance, color, trend, lowerBetter }) {
       </div>
       <div style={{fontSize:26,fontWeight:800,color:t.text,fontFamily:MONO,
         fontVariantNumeric:"tabular-nums",lineHeight:1}}>{value}</div>
+      {/* Two lines, not one: at three-across on a phone there is no room to
+          run the method and the comparison together, and the comparison is the
+          half that stops the delta above from being an unqualified number. */}
       <div style={{fontSize:10,color:t.sec,marginTop:5,overflow:"hidden",
-        textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-        {provenance}{since ? ` · ${since}` : ""}
-      </div>
+        textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{provenance}</div>
+      {since && (
+        <div style={{fontSize:10,color:t.sec,marginTop:1,overflow:"hidden",
+          textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{since}</div>
+      )}
     </div>
   );
 }
