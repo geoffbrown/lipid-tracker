@@ -36,7 +36,7 @@ const useT = () => useContext(ThemeCtx);
    (tabular-nums) rather than a second face, so the app ships no webfont at all:
    no render-blocking request, no swap flash, and nothing about a visit to a
    health app sent to a third-party font host. */
-const FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+const FONT = "'Inter Variable', Inter, system-ui, -apple-system, sans-serif";
 const MONO = FONT;
 
 /* Source categories */
@@ -406,7 +406,7 @@ function Segmented({ options, value, onChange }) {
         const lbl = typeof o==="string"?o:o.label;
         const on = v===value;
         return (
-          <button key={v} onClick={()=>onChange(v)} style={{padding:"5px 10px",border:"none",
+          <button key={v} onClick={()=>onChange(v)} style={{padding:"8px 12px",border:"none",
             cursor:"pointer",fontFamily:FONT,fontSize:15.5,fontWeight:on?700:500,
             background:on?t.accent:"transparent",color:on?t.accentText:t.sec,
             borderLeft:i>0?`1px solid ${t.border}`:"none"}}>{lbl}</button>
@@ -434,7 +434,7 @@ function SheetHeader({ title, onClose }) {
 function SectionLabel({ children }) {
   const t = useT();
   return <div style={{fontSize:15,fontWeight:600,color:t.sec,textTransform:"uppercase",
-    letterSpacing:"0.6px",margin:"22px 4px 8px"}}>{children}</div>;
+    letterSpacing:"0.6px",margin:"28px 4px 10px"}}>{children}</div>;
 }
 
 /* ── Custom date & time picker (replaces the native control) ────────────────── */
@@ -622,10 +622,10 @@ const ReadingRow = function ReadingRow({ reading, ldlMethod, metrics, onSelect }
     <div onClick={() => onSelect(reading)}
       onMouseEnter={e=>e.currentTarget.style.background=t.cardHi}
       onMouseLeave={e=>e.currentTarget.style.background="transparent"}
-      style={{padding:"13px 16px",cursor:"pointer",display:"flex",alignItems:"center",
+      style={{padding:"16px 16px",cursor:"pointer",display:"flex",alignItems:"center",
         justifyContent:"space-between",gap:12,transition:"background .1s"}}>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:5,minWidth:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:7,minWidth:0}}>
           <SourceBadge source={reading.source} />
           <span style={{fontSize:15,color:t.sec,whiteSpace:"nowrap"}}>{fmtDate(reading.timestamp)}</span>
           {reading.sourceName && (
@@ -636,7 +636,7 @@ const ReadingRow = function ReadingRow({ reading, ldlMethod, metrics, onSelect }
               whole line and still could not be read. */}
           {reading.notes && <StickyNote size={14} color={t.sec} style={{flexShrink:0}} />}
         </div>
-        <div style={{display:"flex",gap:16,alignItems:"baseline",overflow:"hidden"}}>
+        <div style={{display:"flex",gap:18,alignItems:"baseline",overflow:"hidden"}}>
           {shown.map(m=>(
             <span key={m.key} style={{display:"inline-flex",alignItems:"baseline",gap:5,
               whiteSpace:"nowrap"}}>
@@ -762,7 +762,7 @@ function SelectSheet({ title, options, current, onSelect, onClose, footer }) {
           <div key={o.value} onClick={()=>onSelect(o.value)}
             onMouseEnter={e=>e.currentTarget.style.background=t.cardHi}
             onMouseLeave={e=>e.currentTarget.style.background=t.card}
-            style={{padding:"13px 15px",cursor:"pointer",display:"flex",justifyContent:"space-between",
+            style={{padding:"16px 15px",cursor:"pointer",display:"flex",justifyContent:"space-between",
               alignItems:"center",gap:12,background:t.card,transition:"background .1s",
               borderBottom:i<options.length-1?`1px solid ${t.border}`:"none"}}>
             <div>
@@ -1139,7 +1139,8 @@ function StatCard({ label, value, unit, provenance, color, trend, lowerBetter, o
     <button onClick={onPress} aria-label={`${label}: choose which metric to show here`}
       onMouseEnter={e=>e.currentTarget.style.background=t.cardHi}
       onMouseLeave={e=>e.currentTarget.style.background=t.card}
-      style={{background:t.card,borderRadius:13,padding:"12px 10px",width:"100%",textAlign:"left",
+      style={{background:t.card,borderRadius:13,padding:"15px 10px",width:"100%",height:"100%",
+        textAlign:"left",
         fontFamily:FONT,cursor:"pointer",transition:"background .1s",
         border:`1px solid ${t.border}`,borderTop:`2px solid ${color}`}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",
@@ -1154,10 +1155,12 @@ function StatCard({ label, value, unit, provenance, color, trend, lowerBetter, o
       <div style={{fontSize:28,fontWeight:800,color:value==null?t.muted:t.text,fontFamily:MONO,
         fontVariantNumeric:"tabular-nums",lineHeight:1,overflow:"hidden",
         textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{value==null ? "—" : value}</div>
-      <div style={{fontSize:14,color:t.sec,marginTop:6,overflow:"hidden",
-        textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{provenance}</div>
+      {/* Normal wrapping, not clipping: "Martin-Hopkins" is the one provenance
+          label too long for a third of a phone, and it breaks at its own hyphen.
+          Every other label fits on one line, so nothing else wraps. */}
+      <div style={{fontSize:13.5,color:t.sec,marginTop:7,lineHeight:1.25}}>{provenance}</div>
       {since && (
-        <div style={{fontSize:14,color:t.sec,marginTop:2,overflow:"hidden",
+        <div style={{fontSize:13.5,color:t.sec,marginTop:3,overflow:"hidden",
           textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{since}</div>
       )}
     </button>
@@ -1302,7 +1305,7 @@ function DashboardView({ enriched, settings, onUpdateSettings, onSelect, onAdd, 
   return (
     <div style={{paddingBottom:16}}>
       {enriched.length>0 && (
-        <div style={{marginTop:16,display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+        <div style={{marginTop:18,display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:9}}>
           {cardKeys.map((key,idx)=>{
             const bm = BM(key), found = latestFor(key);
             return (
@@ -1318,7 +1321,7 @@ function DashboardView({ enriched, settings, onUpdateSettings, onSelect, onAdd, 
         </div>
       )}
 
-      <div style={{background:t.card,borderRadius:14,padding:"16px",marginTop:12,border:`1px solid ${t.border}`}}>
+      <div style={{background:t.card,borderRadius:14,padding:"18px 15px",marginTop:14,border:`1px solid ${t.border}`}}>
         <div style={{display:"flex",gap:8,alignItems:"baseline",flexWrap:"wrap",
           rowGap:2,marginBottom:2}}>
           <MetricButton label={a?.label} color={a?.color} size={20}
@@ -1335,13 +1338,13 @@ function DashboardView({ enriched, settings, onUpdateSettings, onSelect, onAdd, 
                 fontFamily:FONT,fontSize:15,color:t.sec}}>+ Compare</button>
           )}
         </div>
-        <div style={{fontSize:15,color:t.sec,marginBottom:12,lineHeight:1.4}}>
+        <div style={{fontSize:15,color:t.sec,marginBottom:16,lineHeight:1.45}}>
           {fit
             ? `${fit.change >= 0 ? "Up" : "Down"} ${Math.abs(fit.change)}${a?.unit ? ` ${a.unit}` : ""} over ${fmtSpan(fit.days)}`
             : "Not enough readings yet to show a trend"}
           {bucketed && ` · ${original} readings averaged`}
         </div>
-        <div style={{marginBottom:12}}>
+        <div style={{marginBottom:16}}>
           <Segmented options={srcOptions} value={srcMode} onChange={setSrcMode} />
         </div>
 
@@ -1358,7 +1361,7 @@ function DashboardView({ enriched, settings, onUpdateSettings, onSelect, onAdd, 
         ) : (
           <>
             <ResponsiveContainer width="100%" height={216}>
-              <LineChart data={chartData} margin={{top:14,right:10,bottom:6,left:4}}>
+              <LineChart data={chartData} margin={{top:14,right:24,bottom:6,left:4}}>
                 <CartesianGrid strokeDasharray="3 3" stroke={t.grid} vertical={false} />
                 <XAxis dataKey="t" type="number" scale="time" domain={["dataMin","dataMax"]}
                   tickFormatter={fmtShort} tick={{fontSize:15,fill:t.sec,fontFamily:FONT}}
@@ -1397,12 +1400,12 @@ function DashboardView({ enriched, settings, onUpdateSettings, onSelect, onAdd, 
           </>
         )}
 
-        <div style={{display:"flex",justifyContent:"center",marginTop:12}}>
+        <div style={{display:"flex",justifyContent:"center",marginTop:18}}>
           <Segmented options={RANGES} value={range} onChange={setRange} />
         </div>
       </div>
 
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",margin:"22px 4px 8px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",margin:"28px 4px 10px"}}>
         <span style={{fontSize:15,fontWeight:600,color:t.sec,textTransform:"uppercase",letterSpacing:".6px"}}>
           Recent Readings</span>
         {enriched.length>0 && (
@@ -1753,7 +1756,7 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
     <div onClick={onPress}
       onMouseEnter={e=>onPress&&(e.currentTarget.style.background=t.cardHi)}
       onMouseLeave={e=>(e.currentTarget.style.background="transparent")}
-      style={{padding:"13px 15px",display:"flex",justifyContent:"space-between",alignItems:"center",
+      style={{padding:"16px 15px",display:"flex",justifyContent:"space-between",alignItems:"center",
         cursor:onPress?"pointer":"default",transition:"background .1s"}}>
       <div>
         <div style={{fontSize:17,color:danger?t.danger:t.text}}>{label}</div>
@@ -1851,7 +1854,7 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
                 <div onClick={()=>setDeviceDialog({mode:"add",pool})}
                   onMouseEnter={e=>e.currentTarget.style.background=t.cardHi}
                   onMouseLeave={e=>e.currentTarget.style.background="transparent"}
-                  style={{padding:"13px 15px",display:"flex",alignItems:"center",gap:8,
+                  style={{padding:"16px 15px",display:"flex",alignItems:"center",gap:8,
                     cursor:"pointer",transition:"background .1s"}}>
                   <Plus size={15} color={t.text} strokeWidth={2.5} />
                   <span style={{fontSize:17,color:t.text,fontWeight:600}}>
@@ -1901,7 +1904,7 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
           <div onClick={onOpenReport}
             onMouseEnter={e=>e.currentTarget.style.background=t.cardHi}
             onMouseLeave={e=>e.currentTarget.style.background="transparent"}
-            style={{padding:"13px 15px",display:"flex",justifyContent:"space-between",
+            style={{padding:"16px 15px",display:"flex",justifyContent:"space-between",
               alignItems:"center",cursor:"pointer",transition:"background .1s"}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
               <FileText size={15} color={t.text} />
@@ -1913,7 +1916,7 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
           <div onClick={()=>enriched.length && exportCSV(enriched,settings)}
             onMouseEnter={e=>enriched.length&&(e.currentTarget.style.background=t.cardHi)}
             onMouseLeave={e=>(e.currentTarget.style.background="transparent")}
-            style={{padding:"13px 15px",display:"flex",justifyContent:"space-between",alignItems:"center",
+            style={{padding:"16px 15px",display:"flex",justifyContent:"space-between",alignItems:"center",
               cursor:enriched.length?"pointer":"default",opacity:enriched.length?1:0.5,transition:"background .1s"}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
               <Download size={15} color={t.text} />
@@ -1930,7 +1933,7 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
         </div>
 
         <SectionLabel>Legal</SectionLabel>
-        <div style={{...card,padding:"13px 15px"}}>
+        <div style={{...card,padding:"16px 15px"}}>
           <div style={{fontSize:16.5,color:t.sec,lineHeight:1.6}}>
             For informational purposes only. Does not replace professional medical advice.
             Always consult a qualified healthcare provider regarding your cardiovascular health.

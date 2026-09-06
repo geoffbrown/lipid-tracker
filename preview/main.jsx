@@ -3,6 +3,7 @@
    over localStorage with the same shape: get() resolves to {value} or null,
    set() resolves to a truthy result. Nothing else about the app is changed —
    this file exists so the real component tree can be run and looked at. */
+import "./inter.css";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "../LipidLog.jsx";

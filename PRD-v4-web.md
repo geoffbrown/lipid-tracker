@@ -351,9 +351,13 @@ the two disagree grip is usually the more considered of the pair.
   `auto` default that follows `prefers-color-scheme`. This removes the flash of
   wrong theme that LipidLog's context-based approach has on every load.
 - **The neutral ramp**, including its contrast tuning — see §8.1.4.
-- **Typography: the system stack** — adopted. The app now ships no webfont at
-  all; Plus Jakarta Sans and DM Mono are gone, along with the runtime
-  `document.head` injection that fetched them. (`"Helvetica Neue", Helvetica, Arial,
+- **Typography: Inter, self-hosted.** The app carries one variable font file —
+  the latin weight axis, 48KB, covering every weight in use — rather than
+  fetching from Google Fonts. Same reasoning that removed the previous webfonts:
+  no third-party request carrying a visit to a health app, no render-blocking
+  round trip, no swap flash. Figures come from `tabular-nums` on the same face,
+  so there is no second family. In the Next.js port this is what `next/font`
+  does automatically; the prototype does it via `@fontsource-variable/inter`. (`"Helvetica Neue", Helvetica, Arial,
   sans-serif`) with `.tabular` (`font-variant-numeric: tabular-nums`) for
   figures. This replaces LipidLog's Plus Jakarta Sans and DM Mono, which are
   injected at runtime by appending a Google Fonts `<link>` to `document.head`.
@@ -457,7 +461,11 @@ makes a dense screen scannable, and the dashboard reads by hierarchy rather than
 top to bottom. Raising the floor achieves the legibility without flattening the
 page.
 
-Page margins are 12px rather than 20px. Card captions sit one rung below the
+Page margins are 12px rather than 20px, and the vertical rhythm is deliberately
+loose to compensate: list and settings rows at 16px vertical padding, segmented
+controls at 8px, 28px between sections. Density came from the spacing, not the
+type size, and tightening the margins without loosening the rhythm read as
+cramped. Card captions sit one rung below the
 floor, at 14px: they are metadata, and at three-across that is what keeps
 `Martin-Hopkins` on one line. Together those two things are what let the stat
 cards stay three-at-a-glance instead of scrolling.
