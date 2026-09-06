@@ -1,5 +1,9 @@
 # Deploying LipidLog
 
+> **Status: deployed.** The Supabase project, the schema and the Vercel project
+> all exist. Three manual steps remain — see *What is left* below. Parts 1-3
+> further down describe the full path for reference or for a rebuild.
+
 Two services: **Supabase** holds the data and sends sign-in links, **Vercel**
 serves the app. Roughly 30 minutes end to end, most of it waiting for a project
 to provision.
@@ -17,6 +21,89 @@ switches stores and the local ones stay behind.
 
 So either connect Supabase before entering anything real, or export first:
 **Settings → Export CSV**. There is no import flow yet (see the end of this doc).
+
+---
+
+## Already done
+
+These steps are complete — they are recorded here so the doc still describes the
+whole path, but you do not need to repeat them.
+
+| | |
+|---|---|
+| Supabase project | **lipidlog**, `akevwzlymqpyrgtlqald`, us-east-1, free tier |
+| Schema applied | `readings` + `profiles`, RLS enabled on both, policy per operation |
+| Vercel project | **lipidlog**, linked to `geoffbrown/lipid-tracker`, production branch `main` |
+| Live URL | <https://lipidlog.vercel.app> |
+
+A separate Supabase project was created deliberately. The pre-existing one
+(`uaaneubpzsxtkjluywsy`) belongs to the grip strength tracker and already has
+its own `public.readings` and `public.profiles`. This app's migration uses
+`create table if not exists` on those exact names, so applying it there would
+have silently created nothing and left LipidLog writing cholesterol values into
+a grip-strength table.
+
+---
+
+## What is left — three steps, about five minutes
+
+The deployed app is currently running in **local-store mode**: it says "This
+device only" in the header and `/login` says there is no backend configured.
+That is the app correctly reporting that it has no keys yet. Fixing that is
+step 1.
+
+### 1. Add the environment variables in Vercel
+
+**Vercel → lipidlog → Settings → Environment Variables.** Add both, ticked for
+Production, Preview and Development:
+
+| Name | Where to get it |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://akevwzlymqpyrgtlqald.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API → anon / publishable key |
+
+**The key is deliberately not written down in this repo, because this repo is
+public.** The anon key is a publishable value and row-level security is what
+actually protects the data — but a public repo is not the place for it, and
+committing it would also mean rotating it later touches git history.
+
+Then **Deployments → ⋯ → Redeploy**. This is required: `NEXT_PUBLIC_*` values
+are inlined at build time, so the existing build cannot pick them up.
+
+**How to tell it worked:** the "This device only" pill disappears from the
+header.
+
+### 2. Allow the sign-in URLs in Supabase
+
+**Supabase → lipidlog → Authentication → URL Configuration:**
+
+- **Site URL**: `https://lipidlog.vercel.app`
+- **Redirect URLs**, add both:
+  - `https://lipidlog.vercel.app/**`
+  - `http://localhost:3000/**` (so local dev still signs in)
+
+This is the step people skip. Without it the emailed link refuses to complete
+and bounces you to `/login?error=auth`.
+
+### 3. Check email sign-in is on
+
+**Authentication → Sign In / Providers → Email** should be enabled with
+"Confirm email" on. It is on by default for new projects, so this is a
+verification rather than a change.
+
+Then open <https://lipidlog.vercel.app> on your phone, sign in with the emailed
+link, add a reading, and confirm it appears on a second device — which is the
+actual proof it is in Postgres rather than the browser.
+
+---
+
+## Running it locally against the same project
+
+```bash
+cp .env.example .env.local     # fill in the same two values
+npm install
+npm run dev
+```
 
 ---
 
