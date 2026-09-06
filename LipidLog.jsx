@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo, useCallback, useRef, createContext, useCo
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   ReferenceLine } from "recharts";
 import { BarChart2, List, Settings, Plus, ChevronRight, ChevronUp, ChevronDown, X,
-  Trash2, Download, Check, Sun, Moon, Activity, FileText, Pencil, Delete } from "lucide-react";
+  Trash2, Download, Check, Sun, Moon, Activity, FileText, Pencil, Delete,
+  StickyNote } from "lucide-react";
 import { calcDerived, getDispLDL, metricValue, TG_CALC_MAX } from "./src/calc.js";
 import { downsample, fitTrend, fmtSpan } from "./src/chart.js";
 
@@ -31,8 +32,12 @@ const THEMES = {
 const ThemeCtx = createContext(THEMES.dark);
 const useT = () => useContext(ThemeCtx);
 
-const FONT = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif";
-const MONO = "'DM Mono', 'SF Mono', ui-monospace, monospace";
+/* Typeface follows the grip strength tracker. Figures come from a font feature
+   (tabular-nums) rather than a second face, so the app ships no webfont at all:
+   no render-blocking request, no swap flash, and nothing about a visit to a
+   health app sent to a third-party font host. */
+const FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+const MONO = FONT;
 
 /* Source categories */
 const SRC_HOME = { color:"#1B9E5A", label:"Home", ink:{ light:"#157B46", dark:"#1CA25C" } };
@@ -604,43 +609,45 @@ function ChartTooltip({ active, payload, label, bmA, bmB }) {
 }
 
 /* ── Reading row (typography pass; consistent metric weights) ───────────────── */
-const ReadingRow = function ReadingRow({ reading, ldlMethod, onSelect }) {
+const ReadingRow = function ReadingRow({ reading, ldlMethod, metrics, onSelect }) {
   const t = useT();
-  const ldl = getDispLDL(reading, reading.d, ldlMethod);
-  const Metric = ({ label, value }) => (
-    <span style={{display:"inline-flex",alignItems:"baseline",gap:5}}>
-      <span style={{fontSize:16,fontWeight:600,color:t.muted,letterSpacing:"0.4px"}}>{label}</span>
-      <span style={{fontSize:19,fontWeight:600,color:t.text,fontFamily:MONO,
-        fontVariantNumeric:"tabular-nums"}}>{value}</span>
-    </span>
-  );
+  /* The metrics shown are the ones pinned to the dashboard, so the list and the
+     cards agree and neither the app nor the reader has to arbitrate which four
+     of seven numbers matter. */
+  const shown = (Array.isArray(metrics) && metrics.length ? metrics : DEF_SETTINGS.cards)
+    .map(k => { const v = metricValue(reading, k, ldlMethod);
+      return v == null ? null : { key:k, label: BM(k)?.label ?? k, value:v }; })
+    .filter(Boolean);
   return (
     <div onClick={() => onSelect(reading)}
       onMouseEnter={e=>e.currentTarget.style.background=t.cardHi}
       onMouseLeave={e=>e.currentTarget.style.background="transparent"}
-      style={{padding:"14px 16px",cursor:"pointer",display:"flex",alignItems:"center",
-        justifyContent:"space-between",gap:10,transition:"background .1s"}}>
+      style={{padding:"13px 16px",cursor:"pointer",display:"flex",alignItems:"center",
+        justifyContent:"space-between",gap:12,transition:"background .1s"}}>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
+        <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:5,minWidth:0}}>
           <SourceBadge source={reading.source} />
-          <span style={{fontSize:17.5,color:t.sec}}>{fmtDate(reading.timestamp)}</span>
+          <span style={{fontSize:16,color:t.sec,whiteSpace:"nowrap"}}>{fmtDate(reading.timestamp)}</span>
           {reading.sourceName && (
-            <span style={{fontSize:16.5,color:t.muted,overflow:"hidden",whiteSpace:"nowrap",
-              textOverflow:"ellipsis"}}>· {reading.sourceName}</span>
+            <span style={{fontSize:16,color:t.sec,overflow:"hidden",whiteSpace:"nowrap",
+              textOverflow:"ellipsis",minWidth:0}}>· {reading.sourceName}</span>
           )}
+          {/* A note is announced, not previewed: the truncated sentence cost a
+              whole line and still could not be read. */}
+          {reading.notes && <StickyNote size={14} color={t.sec} style={{flexShrink:0}} />}
         </div>
-        <div style={{display:"flex",gap:18,flexWrap:"wrap",alignItems:"baseline"}}>
-          {ldl && <Metric label="LDL" value={ldl.value} />}
-          {reading.hdl!=null && <Metric label="HDL" value={reading.hdl} />}
-          {reading.tc!=null && <Metric label="TC" value={reading.tc} />}
-          {reading.d.apob!=null && <Metric label="ApoB" value={reading.d.apob} />}
+        <div style={{display:"flex",gap:16,alignItems:"baseline",overflow:"hidden"}}>
+          {shown.map(m=>(
+            <span key={m.key} style={{display:"inline-flex",alignItems:"baseline",gap:5,
+              whiteSpace:"nowrap"}}>
+              <span style={{fontSize:16,color:t.sec}}>{m.label}</span>
+              <span style={{fontSize:19,fontWeight:600,color:t.text,
+                fontVariantNumeric:"tabular-nums"}}>{m.value}</span>
+            </span>
+          ))}
         </div>
-        {reading.notes && (
-          <div style={{fontSize:16.5,color:t.muted,marginTop:7,overflow:"hidden",
-            whiteSpace:"nowrap",textOverflow:"ellipsis",maxWidth:280}}>{reading.notes}</div>
-        )}
       </div>
-      <ChevronRight size={15} color={t.muted} strokeWidth={2} style={{flexShrink:0}} />
+      <ChevronRight size={17} color={t.sec} strokeWidth={2} style={{flexShrink:0}} />
     </div>
   );
 };
@@ -1426,7 +1433,8 @@ function DashboardView({ enriched, settings, onUpdateSettings, onSelect, onAdd, 
         <div style={{background:t.card,borderRadius:14,overflow:"hidden",border:`1px solid ${t.border}`}}>
           {recent.map((r,i)=>(
             <div key={r.id}>
-              <ReadingRow reading={r} ldlMethod={settings.ldlMethod} onSelect={onSelect} />
+              <ReadingRow reading={r} ldlMethod={settings.ldlMethod}
+                metrics={settings.cards} onSelect={onSelect} />
               {i<recent.length-1 && <Divider />}
             </div>
           ))}
@@ -1507,7 +1515,8 @@ function HistoryView({ enriched, settings, onSelect }) {
                 border:`1px solid ${t.border}`,borderTop:"none"}}>
                 {rows.map((r,j)=>(
                   <div key={r.id}>
-                    <ReadingRow reading={r} ldlMethod={settings.ldlMethod} onSelect={onSelect} />
+                    <ReadingRow reading={r} ldlMethod={settings.ldlMethod}
+                      metrics={settings.cards} onSelect={onSelect} />
                     {j<rows.length-1 && <Divider />}
                   </div>
                 ))}
@@ -2032,10 +2041,6 @@ export default function App() {
   const t = useResolvedTheme(settings.theme);
 
   useEffect(()=>{
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap";
-    document.head.appendChild(link);
     (async()=>{
       const { readings:r, settings:s } = await loadStorage();
       setReadings(Array.isArray(r)?r:[]);
@@ -2060,7 +2065,7 @@ export default function App() {
       }
       setLoaded(true);
     })();
-    return ()=>{ try{document.head.removeChild(link);}catch{} };
+    return undefined;
   },[]);
 
   useEffect(()=>{

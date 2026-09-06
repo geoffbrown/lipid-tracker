@@ -351,7 +351,9 @@ the two disagree grip is usually the more considered of the pair.
   `auto` default that follows `prefers-color-scheme`. This removes the flash of
   wrong theme that LipidLog's context-based approach has on every load.
 - **The neutral ramp**, including its contrast tuning — see §8.1.4.
-- **Typography: the system stack** (`"Helvetica Neue", Helvetica, Arial,
+- **Typography: the system stack** — adopted. The app now ships no webfont at
+  all; Plus Jakarta Sans and DM Mono are gone, along with the runtime
+  `document.head` injection that fetched them. (`"Helvetica Neue", Helvetica, Arial,
   sans-serif`) with `.tabular` (`font-variant-numeric: tabular-nums`) for
   figures. This replaces LipidLog's Plus Jakarta Sans and DM Mono, which are
   injected at runtime by appending a Google Fonts `<link>` to `document.head`.
@@ -531,6 +533,13 @@ pinned metric still shows its last known value when the latest reading did not
 include it, and a metric with no readings yet shows an em dash and stays
 tappable. Every card names where its number came from — the LDL method, whether
 ApoB was measured or estimated, or that a ratio was derived.
+
+**The reading row shows the pinned metrics, not a fixed four.** It had grown to
+four lines — a header, two wrapped rows of metrics, and a note truncated
+mid-word. It now shows the same metrics as the dashboard cards, so the list and
+the cards agree and neither the app nor the reader has to arbitrate which four
+of seven numbers matter, and a note is announced by an icon rather than
+previewed by a sentence that could not be read anyway. Two lines.
 
 **The stat-card delta says what it measured.** It previously showed a bare
 number: a 7-day change and an 8-month change rendered identically, and a delta
