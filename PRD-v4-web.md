@@ -473,6 +473,18 @@ teaches the encoding and filters by it — replacing a separate legend above the
 chart and a filter below it. The time range stays below the chart, next to the
 axis it scopes.
 
+**The three lead metrics are chosen by the user.** v3.3 fixes the dashboard on
+LDL, HDL and ApoB. Each card is now a control: tapping it opens the biomarker
+list — annotated with each metric's reference range — and the choice is stored
+account-level, so it follows the user rather than the device. Picking a metric
+already shown in another card swaps the two rather than duplicating it.
+
+Cards read from the whole history rather than only the newest reading, so a
+pinned metric still shows its last known value when the latest reading did not
+include it, and a metric with no readings yet shows an em dash and stays
+tappable. Every card names where its number came from — the LDL method, whether
+ApoB was measured or estimated, or that a ratio was derived.
+
 **The stat-card delta says what it measured.** It previously showed a bare
 number: a 7-day change and an 8-month change rendered identically, and a delta
 spanning a home-to-lab transition — mostly method bias — was coloured as
