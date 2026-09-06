@@ -379,7 +379,34 @@ the two disagree grip is usually the more considered of the pair.
   (Tailwind 4 Preflight drops it), `touch-action: manipulation` to remove tap
   delay, `overscroll-behavior: none`, and the native number-spinner reset.
 
-### 8.1.2 Extend rather than copy — the data palette
+### 8.1.2 The panel readout, not a tile row
+
+The dashboard's lead metrics are set as a **ruled panel readout**, not as cards.
+Three rounded cards in a row, each with a coloured bar across the top, is the
+shape every generated dashboard takes; it is generic because it says nothing
+about what the screen contains. A lipid panel is a ruled document — analyte
+name set small above its figure, the figure carrying its unit, columns divided
+by hairlines — and that is a form the subject actually supplies.
+
+Concretely:
+
+- No card, border-radius, fill or accent rail on the metrics. Hairline rules
+  divide the columns; the row sits on the page.
+- Colour still encodes biomarker identity, but on the analyte name — the same
+  place the chart header uses it — rather than on a decorative bar.
+- **Every figure carries its unit.** The readout previously showed bare numbers,
+  which no lab report does, and which was part of why it read as a dashboard
+  rather than a panel.
+- Each metric shows a **reference rail**: a rule with its threshold values
+  marked as ticks and the current value as a dot. No numbers — the position is
+  the point, because a lipid value only means anything against its range. The
+  thresholds cross the rule so it reads as a scale rather than as decoration.
+- Surfaces are spent by role. The chart keeps a card because it is a distinct
+  object; the readings list is ruled rows on the page. Previously everything on
+  the screen was the same card with the same radius, which flattens hierarchy
+  rather than creating it.
+
+### 8.1.3 Extend rather than copy — the data palette
 
 This is where grip stops being a template. It charts three series
 (`--color-series-avg` / `-left` / `-right`). LipidLog charts **seven**
@@ -403,7 +430,7 @@ with two biomarker colours. Resolve it while the palette is being rebuilt —
 source is metadata and should probably read as a neutral or outline treatment
 rather than competing with the data colours.
 
-### 8.1.3 Conflict to resolve — green and red mean two things
+### 8.1.4 Conflict to resolve — green and red mean two things
 
 Grip deliberately keeps its chart series off red and green so those stay free
 for `--color-up` / `--color-down` gain-and-loss semantics. LipidLog cannot do
@@ -420,7 +447,7 @@ it in `--color-ink-soft` in both directions, and drop `--color-up`/`--color-down
 from the trend indicator. Reserve semantic red for destructive actions and
 validation errors only.
 
-### 8.1.4 Contrast — resolved
+### 8.1.5 Contrast — resolved
 
 The neutral ramp has been retuned in both themes. `sec` and `muted` carry real
 content — provenance labels, reference ranges, the interval a delta is measured
@@ -451,7 +478,7 @@ Every string the app renders was checked in a browser at 390x844 in both
 themes, compositing translucent backgrounds against their real ground, and all
 pass AA.
 
-### 8.1.5 Type scale
+### 8.1.6 Type scale
 
 Minimum rendered size is 16px. No text in the app is smaller, and body text sits
 at 17-19px.
@@ -470,7 +497,7 @@ floor, at 14px: they are metadata, and at three-across that is what keeps
 `Martin-Hopkins` on one line. Together those two things are what let the stat
 cards stay three-at-a-glance instead of scrolling.
 
-### 8.1.6 Remaining accessibility debt
+### 8.1.7 Remaining accessibility debt
 
 Grip's neutral ramp has been contrast-tuned, with the reasoning left in the
 source (*"darkened from #9a9aa1 for ~4:1 AA-ish contrast"*). LipidLog's has not,
@@ -569,7 +596,7 @@ readings come from different source types it names the other source instead
 
 ---
 
-### 8.1.7 Open question — which tokens are the source of truth?
+### 8.1.8 Open question — which tokens are the source of truth?
 
 The handoff lists Figma design tokens maintained via Tokens Studio and exported
 as native variables and styles. Those were built for the iOS app and would need

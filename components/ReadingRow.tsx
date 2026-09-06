@@ -23,7 +23,7 @@ export default function ReadingRow({
   return (
     <button
       onClick={() => onSelect(reading)}
-      className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left"
+      className="flex w-full items-center justify-between gap-3 px-3 py-4 text-left"
     >
       <span className="min-w-0 flex-1">
         <span className="mb-1.5 flex min-w-0 items-center gap-1.5">

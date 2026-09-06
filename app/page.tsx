@@ -3,23 +3,33 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Activity } from "lucide-react";
-import StatCard, { type Trend } from "@/components/StatCard";
+import MetricReadout, { type Biomarker, type Trend } from "@/components/MetricReadout";
 import ReadingRow, { type RowMetric } from "@/components/ReadingRow";
 import { getProfileStore, getReadingStore } from "@/lib/store";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { DEFAULT_PROFILE, type Profile, type Reading } from "@/lib/types";
 import { calcDerived, getDispLDL, metricValue } from "@/lib/calc.js";
 
-const BMS = [
-  { key: "ldl", label: "LDL", color: "var(--color-bm-ldl)", lowerBetter: true },
-  { key: "hdl", label: "HDL", color: "var(--color-bm-hdl)", lowerBetter: false },
-  { key: "tc", label: "TC", color: "var(--color-bm-tc)", lowerBetter: true },
-  { key: "tg", label: "TG", color: "var(--color-bm-tg)", lowerBetter: true },
-  { key: "apob", label: "ApoB", color: "var(--color-bm-apob)", lowerBetter: true },
-  { key: "tcHdl", label: "TC/HDL", color: "var(--color-bm-tchdl)", lowerBetter: true },
-  { key: "tgHdl", label: "TG/HDL", color: "var(--color-bm-tghdl)", lowerBetter: true },
+/* Scales and marks come from the reference ranges the app already displays
+   (ATP III-style, informational). The marks are the thresholds a reading is
+   read against; the scale is the domain the rail spans. */
+const BMS: Biomarker[] = [
+  { key: "ldl",   label: "LDL",    unit: "mg/dL", color: "var(--color-bm-ldl)",
+    lowerBetter: true,  scale: [0, 220], marks: [100, 160] },
+  { key: "hdl",   label: "HDL",    unit: "mg/dL", color: "var(--color-bm-hdl)",
+    lowerBetter: false, scale: [0, 100], marks: [40, 60] },
+  { key: "tc",    label: "TC",     unit: "mg/dL", color: "var(--color-bm-tc)",
+    lowerBetter: true,  scale: [0, 320], marks: [200, 240] },
+  { key: "tg",    label: "TG",     unit: "mg/dL", color: "var(--color-bm-tg)",
+    lowerBetter: true,  scale: [0, 300], marks: [150, 200] },
+  { key: "apob",  label: "ApoB",   unit: "mg/dL", color: "var(--color-bm-apob)",
+    lowerBetter: true,  scale: [0, 180], marks: [90, 130] },
+  { key: "tcHdl", label: "TC/HDL", unit: "",      color: "var(--color-bm-tchdl)",
+    lowerBetter: true,  scale: [0, 7],   marks: [3.5] },
+  { key: "tgHdl", label: "TG/HDL", unit: "",      color: "var(--color-bm-tghdl)",
+    lowerBetter: true,  scale: [0, 5],   marks: [2] },
 ];
-const BM = (k: string) => BMS.find((b) => b.key === k);
+const BM = (k: string): Biomarker | undefined => BMS.find((b) => b.key === k);
 const fmtShort = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
@@ -145,19 +155,18 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          <div className="mt-4 grid grid-cols-3 gap-2.5">
+          <div className="mt-3 grid grid-cols-3 divide-x divide-line border-y border-line">
             {profile.cards.map((key, idx) => {
               const bm = BM(key);
               const found = latestFor(key);
+              if (!bm) return <div key={idx} />;
               return (
-                <StatCard
+                <MetricReadout
                   key={idx}
-                  label={bm?.label ?? key}
+                  bm={bm}
                   value={found?.value ?? null}
                   provenance={found ? provenanceFor(key, found.reading) : "No readings yet"}
-                  color={bm?.color ?? "var(--color-ink)"}
                   trend={found ? trendFor(key) : null}
-                  lowerBetter={bm?.lowerBetter ?? true}
                   onPress={() => {
                     /* Metric picker — ported with the rest of the sheets. */
                   }}
@@ -166,10 +175,10 @@ export default function DashboardPage() {
             })}
           </div>
 
-          <h2 className="mt-7 mb-2.5 px-1 font-semibold uppercase tracking-wide text-ink-soft">
+          <h2 className="mt-8 mb-1 px-3 text-[13px] font-semibold tracking-[0.04em] text-ink-faint">
             Recent readings
           </h2>
-          <div className="card divide-y divide-line overflow-hidden">
+          <div className="divide-y divide-line border-y border-line">
             {descending.slice(0, 5).map((r) => (
               <ReadingRow key={r.id} reading={r} metrics={rowMetrics(r)} onSelect={() => {}} />
             ))}
