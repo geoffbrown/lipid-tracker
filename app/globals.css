@@ -1,0 +1,137 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+/* Class-based dark mode. Declaring the variant also keeps `.dark` known to the
+   toolchain, so the override block below is never tree-shaken. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Design tokens.
+
+   Swiss-neutral: the chrome is monochrome ink-on-paper and colour is reserved
+   for data. Every neutral here was solved for contrast rather than picked by
+   eye — ink-soft and ink-faint both carry real content (provenance labels,
+   reference ranges, the interval a delta is measured over) and both clear WCAG
+   AA on the surface they actually sit on, in both themes.
+   ───────────────────────────────────────────────────────────────────────────── */
+@theme {
+  --color-canvas: #f4f4f5;      /* page ground */
+  --color-paper: #ffffff;       /* cards */
+  --color-paper-2: #fafafa;     /* raised rows, selected segments */
+
+  --color-ink: #18181b;         /* primary text */
+  --color-ink-soft: #5e5e68;    /* 5.8:1 on canvas */
+  --color-ink-faint: #6c6c76;   /* 4.7:1 on canvas — content, not decoration */
+
+  --color-line: #dcdce0;
+  --color-line-strong: #c4c4ca;
+  --color-grid: #e2e2e6;        /* chart gridlines */
+
+  --color-strong: #18181b;      /* primary fills */
+  --color-on-strong: #ffffff;
+
+  --color-danger: #d92d20;
+  --color-success: #067647;
+  --color-warn: #b54708;
+  --color-warn-bg: #fffaeb;
+  --color-danger-bg: #fef3f2;
+
+  /* Biomarker identity. Seven, because the app charts seven — a three-series
+     scale does not extend. LDL-red and HDL-green are conventional and worth
+     keeping, which is why hue is not also used to signal trend direction. */
+  --color-bm-ldl: #df3f2e;
+  --color-bm-hdl: #1b9e5a;
+  --color-bm-tc: #2e6fe0;
+  --color-bm-tg: #dc8a1e;
+  --color-bm-apob: #7b4fd4;
+  --color-bm-tchdl: #128591;
+  --color-bm-tghdl: #c2417e;
+
+  /* Source identity. The badge tints its own hue, which never reaches 4.5:1 on
+     its own, so the label takes a separately solved variant. */
+  --color-src-home: #1b9e5a;
+  --color-src-home-ink: #157b46;
+  --color-src-lab: #2e6fe0;
+  --color-src-lab-ink: #2062d5;
+
+  --font-sans: "Inter Variable", Inter, system-ui, -apple-system, sans-serif;
+
+  --shadow-card: 0 1px 2px rgba(20, 20, 25, 0.04), 0 1px 3px rgba(20, 20, 25, 0.06);
+  --shadow-pop: 0 10px 34px rgba(20, 20, 25, 0.14);
+}
+
+:root { color-scheme: light; }
+
+@layer base {
+  .dark {
+    color-scheme: dark;
+
+    --color-canvas: #0c0c0d;
+    --color-paper: #161618;
+    --color-paper-2: #1f1f22;
+
+    --color-ink: #fafafa;
+    --color-ink-soft: #9c9ca6;   /* 6.6:1 on paper */
+    --color-ink-faint: #85858f;  /* 5.0:1 on paper */
+
+    --color-line: rgba(255, 255, 255, 0.16);
+    --color-line-strong: rgba(255, 255, 255, 0.30);
+    --color-grid: rgba(255, 255, 255, 0.13);
+
+    --color-strong: #fafafa;
+    --color-on-strong: #0c0c0d;
+
+    --color-danger: #f97066;
+    --color-success: #3ccb7f;
+    --color-warn: #f79009;
+    --color-warn-bg: rgba(247, 144, 9, 0.1);
+    --color-danger-bg: rgba(249, 112, 102, 0.12);
+
+    --color-src-home-ink: #1ca25c;
+    --color-src-lab-ink: #568be6;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-pop: 0 12px 40px rgba(0, 0, 0, 0.6);
+  }
+}
+
+html, body { background: var(--color-canvas); color: var(--color-ink); }
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  accent-color: var(--color-strong);
+  margin: 0;
+}
+
+/* Figures line up in columns throughout — a font feature, not a second face. */
+.tabular { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+
+.card {
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 0.875rem;
+}
+
+html { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+button, a, [role="button"], input, select, textarea, label { touch-action: manipulation; }
+
+@layer base {
+  button:not(:disabled), [role="button"]:not(:disabled), label[for], summary,
+  select:not(:disabled) { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+  :focus-visible { outline: 2px solid var(--color-strong); outline-offset: 2px; border-radius: 5px; }
+}
+
+/* Hide native number spinners — every numeric field here is a measurement. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

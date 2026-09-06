@@ -35,7 +35,7 @@ Tailwind 4 + Vitest**.
 > more up-front work than a Vite wrapper, but it is where the reuse actually
 > lives. Recommendation: take Next.js. Decide before any scaffolding.
 
-`src/calc.js` is deliberately free of React, DOM and storage dependencies so it
+`lib/calc.js` is deliberately free of React, DOM and storage dependencies so it
 drops into either choice unchanged.
 
 ---
@@ -85,7 +85,7 @@ This adds a display label to v3.3 §Calculation Architecture > Display labels.
 > open item in the project.**
 
 v3.3 specifies: *"The adjusted divisor varies based on TG level **and non-HDL
-cholesterol strata**."* The implementation in `src/calc.js` is keyed on
+cholesterol strata**."* The implementation in `lib/calc.js` is keyed on
 triglycerides alone — an 18-row, one-dimensional table, not the published
 180-cell TG x non-HDL matrix.
 
@@ -186,7 +186,7 @@ stays runnable and screenshottable before any keys exist.
 ### 5.2 Schema (proposed)
 
 Mirrors grip's patterns. `readings` holds raw inputs only — every derived value
-is computed at read time by `src/calc.js`, so changing the ApoB or LDL method
+is computed at read time by `lib/calc.js`, so changing the ApoB or LDL method
 reprices history with no migration, exactly as v3.3 requires.
 
 ```sql
@@ -585,7 +585,7 @@ Both cannot be authoritative. See OPEN-6.
 | # | Decision | Blocks | Recommendation |
 |---|---|---|---|
 | OPEN-1 | Next.js vs Vite | All scaffolding | Next.js — that is where the reuse is |
-| OPEN-2 | Martin-Hopkins divisor table | The port of `src/calc.js` | Obtain the source table before porting |
+| OPEN-2 | Martin-Hopkins divisor table | The port of `lib/calc.js` | Obtain the source table before porting |
 | OPEN-3 | Single-user vs multi-user | The schema | Multi-user — grip's shape, costs nothing now |
 | OPEN-4 | Source pools as `text[]` or a table | The schema | `text[]` unless rename/delete needs auditing |
 | OPEN-5 | Account deletion flow | Privacy section | Design before launch, not before build |

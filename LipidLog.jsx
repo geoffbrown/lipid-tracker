@@ -4,8 +4,8 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import { BarChart2, List, Settings, Plus, ChevronRight, ChevronUp, ChevronDown, X,
   Trash2, Download, Check, Sun, Moon, Activity, FileText, Pencil, Delete,
   StickyNote } from "lucide-react";
-import { calcDerived, getDispLDL, metricValue, TG_CALC_MAX } from "./src/calc.js";
-import { downsample, fitTrend, fmtSpan } from "./src/chart.js";
+import { calcDerived, getDispLDL, metricValue, TG_CALC_MAX } from "./lib/calc.js";
+import { downsample, fitTrend, fmtSpan } from "./lib/chart.js";
 
 /* ════════════════════════════════════════════════════════════════════════════
    THEME. Swiss-neutral. Chrome is monochrome (ink / paper); data carries colour.
@@ -778,7 +778,7 @@ function SelectSheet({ title, options, current, onSelect, onClose, footer }) {
           border:`1px solid ${t.border}`}}>
           <div style={{fontSize:15,fontWeight:600,color:t.sec,letterSpacing:".4px",
             textTransform:"uppercase",marginBottom:6}}>How these work</div>
-          <div style={{fontSize:16,color:t.sec,lineHeight:1.6}}>{footer}</div>
+          <div style={{fontSize:16,color:t.sec,lineHeight:1.6,whiteSpace:"pre-line"}}>{footer}</div>
         </div>
       )}
     </div>
@@ -1945,7 +1945,7 @@ function SettingsView({ settings, onUpdate, enriched, onClearAll, onOpenReport,
         <Sheet onClose={()=>setPicker(null)}>{close=>(
           <SelectSheet title="LDL Calculation" options={LDL_OPTS} current={settings.ldlMethod}
             onSelect={v=>{onUpdate({...settings,ldlMethod:v});close();}} onClose={close}
-            footer={"Friedewald uses a fixed divisor (TG ÷ 5) and tends to under-report LDL when triglycerides are low. Martin-Hopkins uses an adjustable divisor based on your TG and non-HDL levels, which is more accurate across most ranges. \u201cOff\u201d keeps the device-reported value exactly as entered."} />
+            footer={"Friedewald uses a fixed divisor (TG \u00f7 5) and tends to under-report LDL when triglycerides are low. Martin-Hopkins uses an adjustable divisor, which is more accurate across most ranges. \u201cOff\u201d keeps the reported value exactly as entered.\n\nNote: the published Martin-Hopkins method selects its divisor from triglycerides and non-HDL cholesterol together. This build selects on triglycerides alone, so its values are close to the method but not identical to it. Neither estimate is shown above 400 mg/dL triglycerides, where both are invalid."} />
         )}</Sheet>
       )}
       {picker==="apob" && (

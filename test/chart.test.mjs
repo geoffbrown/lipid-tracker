@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { downsample, fitTrend, fmtSpan, MAX_CHART_POINTS } from "../src/chart.js";
+import { downsample, fitTrend, fmtSpan, MAX_CHART_POINTS } from "../lib/chart.js";
 
 const DAY = 86400000;
 const T0 = Date.UTC(2026, 0, 5);

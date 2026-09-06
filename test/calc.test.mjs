@@ -1,13 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { calcDerived, getDispLDL, getMHDiv, MH_TABLE, TG_CALC_MAX } from "../src/calc.js";
+import { calcDerived, getDispLDL, getMHDiv, MH_TABLE, TG_CALC_MAX,
+  MH_TABLE_IS_APPROXIMATE } from "../lib/calc.js";
 
 /* ────────────────────────────────────────────────────────────────────────────
    1. FROZEN BASELINE
 
    A verbatim copy of the calculator as it stood in the original LipidLog.jsx
-   prototype, before the logic was extracted into src/calc.js. It exists for
+   prototype, before the logic was extracted into lib/calc.js. It exists for
    one purpose: to prove that the extraction and the triglyceride ceiling did
    not disturb any value inside the validated range. Do not "fix" it and do
    not import from it — it is a historical record, not live code.
@@ -76,6 +77,20 @@ test("extraction is behaviour-preserving for every TG below the ceiling", () => 
 test("divisor lookup matches the baseline across the whole validated range", () => {
   for (let tg = 0; tg < TG_CALC_MAX; tg++)
     assert.equal(getMHDiv(tg), baselineMHDiv(tg), `divisor diverged at TG=${tg}`);
+});
+
+test("the divisor table is flagged as an approximation of the published method", () => {
+  /* The published Martin-Hopkins table selects on triglycerides AND non-HDL-C.
+     This one does not. The flag exists so the gap cannot be forgotten, and this
+     test fails the moment someone clears it without adding the second axis —
+     at which point getMHDiv must actually vary with its nonHDL argument. */
+  assert.equal(MH_TABLE_IS_APPROXIMATE, true,
+    "if the real 180-cell table has landed, this test should be replaced by one that " +
+    "asserts getMHDiv varies with non-HDL");
+  const atLowNonHDL  = getMHDiv(150, 80);
+  const atHighNonHDL = getMHDiv(150, 240);
+  assert.equal(atLowNonHDL, atHighNonHDL,
+    "the current table is one-dimensional, so non-HDL must not change the divisor");
 });
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -191,7 +206,7 @@ test("a lab-measured ApoB wins over the estimate, but only for lab sources", () 
    synthetic-readings.json is invented data. It catches drift — change any
    derived value and one of these fails — but it cannot establish that the
    calculator is clinically correct, because its expectations were written by
-   us. They were at least derived independently of src/calc.js (see the 'work'
+   us. They were at least derived independently of lib/calc.js (see the 'work'
    field on each case), so agreement is a cross-check rather than a tautology.
 
    validated-readings.json is the real thing: the six readings from personal
