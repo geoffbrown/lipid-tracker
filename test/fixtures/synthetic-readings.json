@@ -1,0 +1,275 @@
+{
+  "_comment": [
+    "SYNTHETIC regression fixtures. These readings are invented, not measured.",
+    "",
+    "They exist to catch drift: if a port or a refactor changes any derived",
+    "value, one of these fails. They do NOT establish that the calculator is",
+    "clinically correct \u2014 only real measurements can do that, and those belong",
+    "in validated-readings.json, which is still empty.",
+    "",
+    "Every expected value here was derived independently, from the method",
+    "definitions rather than by running src/calc.js, so that agreement between",
+    "the two is a genuine cross-check. The 'work' field shows the longhand for",
+    "each case so any number can be checked by hand."
+  ],
+  "readings": [
+    {
+      "note": "Low triglycerides \u2014 the widest divisor in the table (TG 45 -> 8.9)",
+      "input": {
+        "tc": 165,
+        "hdl": 62,
+        "tg": 45,
+        "ldl": 96,
+        "source": "POC"
+      },
+      "apobMethod": "interheart",
+      "work": [
+        "non-HDL = 165 - 62 = 103.0",
+        "TC/HDL = 165/62 = 2.66",
+        "TG/HDL = 45/62 = 0.73",
+        "Friedewald = 165 - 62 - 45/5 = 94.0",
+        "Martin-Hopkins divisor for TG 45 = 8.9",
+        "Martin-Hopkins = 165 - 62 - 45/8.9 = 97.9",
+        "ApoB (INTERHEART) = 0.73 x non-HDL + 5 = 80.19 -> 80"
+      ],
+      "expect": {
+        "nonHDL": 103.0,
+        "tcHdl": 2.66,
+        "tgHdl": 0.73,
+        "ldlFried": 94.0,
+        "ldlMH": 97.9,
+        "ldlDelta": 3.9,
+        "apob": 80,
+        "apobLabel": "INTERHEART"
+      }
+    },
+    {
+      "note": "Mid-range reading, the common case (TG 132 -> 5.6)",
+      "input": {
+        "tc": 195,
+        "hdl": 48,
+        "tg": 132,
+        "ldl": 118,
+        "source": "POC"
+      },
+      "apobMethod": "interheart",
+      "work": [
+        "non-HDL = 195 - 48 = 147.0",
+        "TC/HDL = 195/48 = 4.06",
+        "TG/HDL = 132/48 = 2.75",
+        "Friedewald = 195 - 48 - 132/5 = 120.6",
+        "Martin-Hopkins divisor for TG 132 = 5.6",
+        "Martin-Hopkins = 195 - 48 - 132/5.6 = 123.4",
+        "ApoB (INTERHEART) = 0.73 x non-HDL + 5 = 112.3 -> 112"
+      ],
+      "expect": {
+        "nonHDL": 147.0,
+        "tcHdl": 4.06,
+        "tgHdl": 2.75,
+        "ldlFried": 120.6,
+        "ldlMH": 123.4,
+        "ldlDelta": 2.8,
+        "apob": 112,
+        "apobLabel": "INTERHEART"
+      }
+    },
+    {
+      "note": "Elevated LDL with low HDL (TG 168 -> 5.3)",
+      "input": {
+        "tc": 248,
+        "hdl": 38,
+        "tg": 168,
+        "ldl": 172,
+        "source": "POC"
+      },
+      "apobMethod": "interheart",
+      "work": [
+        "non-HDL = 248 - 38 = 210.0",
+        "TC/HDL = 248/38 = 6.53",
+        "TG/HDL = 168/38 = 4.42",
+        "Friedewald = 248 - 38 - 168/5 = 176.4",
+        "Martin-Hopkins divisor for TG 168 = 5.3",
+        "Martin-Hopkins = 248 - 38 - 168/5.3 = 178.3",
+        "ApoB (INTERHEART) = 0.73 x non-HDL + 5 = 158.3 -> 158"
+      ],
+      "expect": {
+        "nonHDL": 210.0,
+        "tcHdl": 6.53,
+        "tgHdl": 4.42,
+        "ldlFried": 176.4,
+        "ldlMH": 178.3,
+        "ldlDelta": 1.9,
+        "apob": 158,
+        "apobLabel": "INTERHEART"
+      }
+    },
+    {
+      "note": "Aggressive ApoB method on the same shape of reading",
+      "input": {
+        "tc": 210,
+        "hdl": 44,
+        "tg": 155,
+        "ldl": 132,
+        "source": "POC"
+      },
+      "apobMethod": "aggressive",
+      "work": [
+        "non-HDL = 210 - 44 = 166.0",
+        "TC/HDL = 210/44 = 4.77",
+        "TG/HDL = 155/44 = 3.52",
+        "Friedewald = 210 - 44 - 155/5 = 135.0",
+        "Martin-Hopkins divisor for TG 155 = 5.3",
+        "Martin-Hopkins = 210 - 44 - 155/5.3 = 136.8",
+        "ApoB (Aggressive) = 0.87 x non-HDL + 3 = 147.4 -> 147"
+      ],
+      "expect": {
+        "nonHDL": 166.0,
+        "tcHdl": 4.77,
+        "tgHdl": 3.52,
+        "ldlFried": 135.0,
+        "ldlMH": 136.8,
+        "ldlDelta": 1.8,
+        "apob": 147,
+        "apobLabel": "Aggressive"
+      }
+    },
+    {
+      "note": "Lab reading with a measured ApoB, which must win over the estimate",
+      "input": {
+        "tc": 188,
+        "hdl": 57,
+        "tg": 88,
+        "ldl": 112,
+        "source": "Lab",
+        "apobMeasured": 79
+      },
+      "apobMethod": "interheart",
+      "work": [
+        "non-HDL = 188 - 57 = 131.0",
+        "TC/HDL = 188/57 = 3.3",
+        "TG/HDL = 88/57 = 1.54",
+        "Friedewald = 188 - 57 - 88/5 = 113.4",
+        "Martin-Hopkins divisor for TG 88 = 7.0",
+        "Martin-Hopkins = 188 - 57 - 88/7.0 = 118.4",
+        "ApoB measured in lab = 79, overrides the estimate"
+      ],
+      "expect": {
+        "nonHDL": 131.0,
+        "tcHdl": 3.3,
+        "tgHdl": 1.54,
+        "ldlFried": 113.4,
+        "ldlMH": 118.4,
+        "ldlDelta": 5.0,
+        "apob": 79,
+        "apobLabel": "Lab Measured"
+      }
+    },
+    {
+      "note": "Last triglyceride value below the ceiling (TG 399 -> 4.3)",
+      "input": {
+        "tc": 305,
+        "hdl": 35,
+        "tg": 399,
+        "ldl": 190,
+        "source": "POC"
+      },
+      "apobMethod": "interheart",
+      "work": [
+        "non-HDL = 305 - 35 = 270.0",
+        "TC/HDL = 305/35 = 8.71",
+        "TG/HDL = 399/35 = 11.4",
+        "Friedewald = 305 - 35 - 399/5 = 190.2",
+        "Martin-Hopkins divisor for TG 399 = 4.3",
+        "Martin-Hopkins = 305 - 35 - 399/4.3 = 177.2",
+        "ApoB (INTERHEART) = 0.73 x non-HDL + 5 = 202.1 -> 202"
+      ],
+      "expect": {
+        "nonHDL": 270.0,
+        "tcHdl": 8.71,
+        "tgHdl": 11.4,
+        "ldlFried": 190.2,
+        "ldlMH": 177.2,
+        "ldlDelta": -13.0,
+        "apob": 202,
+        "apobLabel": "INTERHEART"
+      }
+    },
+    {
+      "note": "Exactly at the ceiling \u2014 both estimates withheld",
+      "input": {
+        "tc": 310,
+        "hdl": 34,
+        "tg": 400,
+        "ldl": 196,
+        "source": "POC"
+      },
+      "apobMethod": "interheart",
+      "work": [
+        "non-HDL = 310 - 34 = 276.0",
+        "TC/HDL = 310/34 = 9.12",
+        "TG/HDL = 400/34 = 11.76",
+        "TG 400 >= 400: neither method valid, both estimates withheld",
+        "ApoB (INTERHEART) = 0.73 x non-HDL + 5 = 206.5 -> 206"
+      ],
+      "expect": {
+        "nonHDL": 276.0,
+        "tcHdl": 9.12,
+        "tgHdl": 11.76,
+        "ldlFried": null,
+        "ldlMH": null,
+        "ldlCalcBlocked": true,
+        "apob": 206,
+        "apobLabel": "INTERHEART"
+      }
+    },
+    {
+      "note": "Well above the ceiling, severe hypertriglyceridaemia",
+      "input": {
+        "tc": 352,
+        "hdl": 29,
+        "tg": 620,
+        "ldl": 214,
+        "source": "POC"
+      },
+      "apobMethod": "interheart",
+      "work": [
+        "non-HDL = 352 - 29 = 323.0",
+        "TC/HDL = 352/29 = 12.14",
+        "TG/HDL = 620/29 = 21.38",
+        "TG 620 >= 400: neither method valid, both estimates withheld",
+        "ApoB (INTERHEART) = 0.73 x non-HDL + 5 = 240.8 -> 241"
+      ],
+      "expect": {
+        "nonHDL": 323.0,
+        "tcHdl": 12.14,
+        "tgHdl": 21.38,
+        "ldlFried": null,
+        "ldlMH": null,
+        "ldlCalcBlocked": true,
+        "apob": 241,
+        "apobLabel": "INTERHEART"
+      }
+    },
+    {
+      "note": "Partial reading \u2014 no triglycerides, so no LDL estimate at all",
+      "input": {
+        "tc": 182,
+        "hdl": 54,
+        "ldl": 110,
+        "source": "POC"
+      },
+      "apobMethod": "interheart",
+      "work": [
+        "non-HDL = 182 - 54 = 128.0",
+        "TC/HDL = 182/54 = 3.37",
+        "ApoB (INTERHEART) = 0.73 x non-HDL + 5 = 98.44 -> 98"
+      ],
+      "expect": {
+        "nonHDL": 128.0,
+        "tcHdl": 3.37,
+        "apob": 98,
+        "apobLabel": "INTERHEART"
+      }
+    }
+  ]
+}

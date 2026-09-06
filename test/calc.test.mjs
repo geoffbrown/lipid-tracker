@@ -184,20 +184,49 @@ test("a lab-measured ApoB wins over the estimate, but only for lab sources", () 
 });
 
 /* ────────────────────────────────────────────────────────────────────────────
-   6. REAL VALIDATED READINGS
+   6. FIXTURE-DRIVEN CASES
 
-   The handoff states the calculator was validated against six real readings
-   from personal test history. Until those are recorded in the fixture file
-   this suite proves internal consistency only, not correctness against
-   ground truth — so it reports loudly rather than passing quietly.
+   Two sets, and the difference between them matters.
+
+   synthetic-readings.json is invented data. It catches drift — change any
+   derived value and one of these fails — but it cannot establish that the
+   calculator is clinically correct, because its expectations were written by
+   us. They were at least derived independently of src/calc.js (see the 'work'
+   field on each case), so agreement is a cross-check rather than a tautology.
+
+   validated-readings.json is the real thing: the six readings from personal
+   test history named in LipidLog-CC-handoff.md. Until it is filled, nothing
+   in this suite proves correctness against ground truth, so it reports as
+   skipped rather than passing quietly.
    ──────────────────────────────────────────────────────────────────────────── */
-const fixtures = JSON.parse(readFileSync(new URL("./fixtures/validated-readings.json", import.meta.url)));
+const load = name => JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url)));
 
-test("validated readings reproduce their recorded expectations", { skip: fixtures.readings.length === 0
-    ? "No validated readings recorded yet — see test/fixtures/validated-readings.json" : false }, () => {
+function checkAll(fixtures) {
   for (const { note, input, apobMethod = "interheart", expect } of fixtures.readings) {
     const d = calcDerived(input, apobMethod);
     for (const [key, want] of Object.entries(expect))
       assert.equal(d[key], want, `${note}: expected ${key}=${want}, got ${d[key]}`);
   }
+}
+
+const synthetic = load("synthetic-readings.json");
+
+test("synthetic fixtures match independently derived expectations", () => {
+  assert.ok(synthetic.readings.length >= 9, "synthetic set should cover the full range of behaviour");
+  checkAll(synthetic);
+});
+
+test("synthetic fixtures span both sides of the ceiling", () => {
+  const blocked = synthetic.readings.filter(r => r.expect.ldlCalcBlocked === true);
+  const calculated = synthetic.readings.filter(r => r.expect.ldlMH != null);
+  assert.ok(blocked.length >= 2, "need cases at and above the ceiling");
+  assert.ok(calculated.length >= 4, "need cases that still calculate");
+});
+
+const validated = load("validated-readings.json");
+
+test("validated readings reproduce their recorded expectations", { skip: validated.readings.length === 0
+    ? "No real validated readings recorded yet — synthetic fixtures prove consistency, not correctness"
+    : false }, () => {
+  checkAll(validated);
 });
