@@ -319,13 +319,129 @@ migration path out of the prototype, which raises the bar on its fidelity.
 ## 8. UI surface — CARRIES
 
 v3.3 §Pages, §Visualization, §History View, §Reference Ranges, §Notes and
-§Timestamp all carry unchanged. SF Pro / SF Symbols / HIG references are replaced
-by the web design tokens already exported from Figma via Tokens Studio.
+§Timestamp all carry unchanged.
 
 Onboarding carries minus the HealthKit step, and is currently unimplemented: the
 prototype has no onboarding flow. The medical disclaimer requirement (v3.3
 §Legal — shown during onboarding and accessible in Settings) is currently met in
 Settings only.
+
+---
+
+## 8.1 Visual direction — NEW
+
+SF Pro / SF Symbols / HIG references in v3.3 are void on web. The visual system
+takes its direction from the grip strength tracker.
+
+This is a smaller change than it sounds. Both apps already state the same thesis
+almost word for word — grip's tokens are headed *"Swiss type & grid ×
+contemporary app surfaces"*, LipidLog's *"Swiss-neutral. Chrome is monochrome
+(ink / paper); data carries colour."* The merge is mostly mechanical, and where
+the two disagree grip is usually the more considered of the pair.
+
+### 8.1.1 Adopt from grip
+
+- **Token architecture.** Tailwind 4 `@theme` custom properties, with the dark
+  theme redefining the same properties inside `@layer base .dark`. Re-theming
+  the properties re-themes every utility, so there is one place to change a
+  colour. LipidLog's current inline style objects threaded through React context
+  cannot survive the port regardless.
+- **Pre-paint theme script.** Grip sets the `.dark` class from a blocking inline
+  script before first paint (`lib/theme.ts`), reading `localStorage` with an
+  `auto` default that follows `prefers-color-scheme`. This removes the flash of
+  wrong theme that LipidLog's context-based approach has on every load.
+- **The neutral ramp**, including its contrast tuning — see §8.1.4.
+- **Typography: the system stack** (`"Helvetica Neue", Helvetica, Arial,
+  sans-serif`) with `.tabular` (`font-variant-numeric: tabular-nums`) for
+  figures. This replaces LipidLog's Plus Jakarta Sans and DM Mono, which are
+  injected at runtime by appending a Google Fonts `<link>` to `document.head`.
+  Dropping them removes a render-blocking third-party request, a font-swap
+  flash, and — given §5.4 — a per-visit request to Google carrying the user's IP
+  from a health app. Tabular numerals come from a font feature rather than a
+  second webfont.
+- **The `.card` surface**: paper background, 1px hairline border, 1rem radius,
+  and the two-layer `--shadow-card`. LipidLog's cards are currently flat with no
+  elevation.
+- **The print stylesheet.** Grip's `@media print` block sets page margins, forces
+  `print-color-adjust: exact` so chart fills survive, flattens shadows, and marks
+  `.no-print` / `.print-break-avoid`. LipidLog has a report view and none of
+  this.
+- **`prefers-reduced-motion`.** Grip disables its entrance animations under it.
+  LipidLog animates sheets and toasts with no such guard — an accessibility
+  defect, not a preference.
+- **The interaction-affordance block**: restored `cursor: pointer` on controls
+  (Tailwind 4 Preflight drops it), `touch-action: manipulation` to remove tap
+  delay, `overscroll-behavior: none`, and the native number-spinner reset.
+
+### 8.1.2 Extend rather than copy — the data palette
+
+This is where grip stops being a template. It charts three series
+(`--color-series-avg` / `-left` / `-right`). LipidLog charts **seven**
+biomarkers, each with a fixed identity: LDL red, HDL green, TC blue, TG orange,
+ApoB violet, TC/HDL teal, TG/HDL pink. Grip's three-colour scale does not
+extend, and the biomarker colours carry domain meaning — LDL-red and HDL-green
+are conventional and worth keeping.
+
+So LipidLog needs its own `--color-bm-*` scale of seven, sitting alongside grip's
+neutral and semantic tokens rather than replacing them.
+
+One thing to take from grip while building it: **grip defines its series colours
+twice**, once per theme, lightening them for dark surfaces (`#2563eb` →
+`#93c5fd`). LipidLog uses a single fixed palette described as *"mid-tone,
+legible on both light and dark"* — a compromise that serves neither surface
+optimally. The seven biomarker colours should each get a light and a dark
+variant and be contrast-checked against both canvases.
+
+Source identity (Home green `#1B9E5A` / Lab blue `#2E6FE0`) currently collides
+with two biomarker colours. Resolve it while the palette is being rebuilt —
+source is metadata and should probably read as a neutral or outline treatment
+rather than competing with the data colours.
+
+### 8.1.3 Conflict to resolve — green and red mean two things
+
+Grip deliberately keeps its chart series off red and green so those stay free
+for `--color-up` / `--color-down` gain-and-loss semantics. LipidLog cannot do
+that, because red and green *are* two of its biomarker identities.
+
+It currently has the collision both ways: `StatCard` renders a favourable trend
+in `t.success` (green) and an unfavourable one in `t.sec` (grey) — so green
+means both "HDL" and "improving", while the unfavourable case is not red at all,
+which is inconsistent on its own terms.
+
+Recommendation: keep the biomarker palette as identity, and stop using hue to
+carry trend direction. The ▲/▼ glyph already present is doing that work; render
+it in `--color-ink-soft` in both directions, and drop `--color-up`/`--color-down`
+from the trend indicator. Reserve semantic red for destructive actions and
+validation errors only.
+
+### 8.1.4 Accessibility debt to clear in the port
+
+Grip's neutral ramp has been contrast-tuned, with the reasoning left in the
+source (*"darkened from #9a9aa1 for ~4:1 AA-ish contrast"*). LipidLog's has not,
+and it currently fails:
+
+| token | on | ratio | |
+|---|---|---|---|
+| LipidLog `muted` `#A1A1AA` | light `#F4F4F5` | **2.33:1** | fails |
+| LipidLog `muted` `#56565C` | dark `#0C0C0D` | **2.68:1** | fails |
+| LipidLog `sec` `#71717A` | light `#F4F4F5` | 4.40:1 | marginal |
+| grip `ink-faint` `#7c7c84` | light `#f5f5f2` | 3.79:1 | large text only |
+| grip `ink-soft` `#6c6c73` | light `#f5f5f2` | 4.77:1 | passes |
+| grip `ink-faint` `#85858d` | dark `#0d0d0f` | 5.30:1 | passes |
+
+`muted` is not decorative in LipidLog. It carries the ApoB and LDL provenance
+labels, the reference-range strings, and the disclaimer note — the text that
+tells a user *which method produced the number they are looking at*. Adopting
+grip's ramp fixes this as a side effect; adopting only its layout would not.
+
+### 8.1.5 Open question — which tokens are the source of truth?
+
+The handoff lists Figma design tokens maintained via Tokens Studio and exported
+as native variables and styles. Those were built for the iOS app and would need
+re-exporting for web. Grip's tokens, by contrast, are already running in
+production in the target stack.
+
+Both cannot be authoritative. See OPEN-6.
 
 ---
 
@@ -338,6 +454,9 @@ Settings only.
 | OPEN-3 | Single-user vs multi-user | The schema | Multi-user — grip's shape, costs nothing now |
 | OPEN-4 | Source pools as `text[]` or a table | The schema | `text[]` unless rename/delete needs auditing |
 | OPEN-5 | Account deletion flow | Privacy section | Design before launch, not before build |
+| OPEN-6 | Token source of truth: grip's tokens vs the Figma/Tokens Studio set | The visual system | Grip's — already running in the target stack; re-point Figma at it |
+| OPEN-7 | Warm neutrals (grip `#f5f5f2`) vs LipidLog's cool zinc ramp | The neutral palette | Warm, for consistency across the two apps |
+| OPEN-8 | System font stack vs the Plus Jakarta Sans / DM Mono webfonts | Typography | System stack — see §8.1.1 |
 
 ---
 
