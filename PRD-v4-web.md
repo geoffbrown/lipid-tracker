@@ -457,11 +457,10 @@ makes a dense screen scannable, and the dashboard reads by hierarchy rather than
 top to bottom. Raising the floor achieves the legibility without flattening the
 page.
 
-The type scale drove one layout change. Three stat cards across a phone leave
-about 91px of usable width per card, which cannot hold `INTERHEART` — let alone
-`Martin-Hopkins` — at 16px. The card row now scrolls horizontally with fixed
-158px cards, so each caption sits on one line and the partly visible next card
-is its own affordance. It also lifts the cap of three.
+Page margins are 12px rather than 20px. Card captions sit one rung below the
+floor, at 14px: they are metadata, and at three-across that is what keeps
+`Martin-Hopkins` on one line. Together those two things are what let the stat
+cards stay three-at-a-glance instead of scrolling.
 
 ### 8.1.6 Remaining accessibility debt
 
@@ -533,6 +532,18 @@ pinned metric still shows its last known value when the latest reading did not
 include it, and a metric with no readings yet shows an em dash and stays
 tappable. Every card names where its number came from — the LDL method, whether
 ApoB was measured or estimated, or that a ratio was derived.
+
+**The chart card reads as one statement.** It opened with two boxed fields
+whose eyebrow labels — `METRIC`, `COMPARE` — only repeated the value beneath
+them, and closed with a caption floating under the plot. It now runs: the
+metric name, what it is compared against, what the fitted trend says in words,
+the source filter, the chart, the time range. Six chrome elements became four,
+and two redundant labels are gone.
+
+The two metric names carry their series colours, and the y-axis ticks already
+match them, so the separate series legend is retired — the header is the legend.
+With nothing to compare against, the control reads `+ Compare` rather than
+naming an absence.
 
 **The reading row shows the pinned metrics, not a fixed four.** It had grown to
 four lines — a header, two wrapped rows of metrics, and a note truncated
