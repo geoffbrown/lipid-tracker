@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo, useCallback, useRef, createContext, useContext } from "react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  ReferenceLine } from "recharts";
 import { BarChart2, List, Settings, Plus, ChevronRight, ChevronUp, ChevronDown, X,
   Trash2, Download, Check, Sun, Moon, Activity, FileText, Pencil, Delete } from "lucide-react";
 import { calcDerived, getDispLDL, metricValue, TG_CALC_MAX } from "./src/calc.js";
+import { downsample, fitTrend, fmtSpan } from "./src/chart.js";
 
 /* ════════════════════════════════════════════════════════════════════════════
    THEME. Swiss-neutral. Chrome is monochrome (ink / paper); data carries colour.
@@ -90,7 +92,6 @@ const DEF_SETTINGS = {
   defaultDevice:"CURO L7/L5", defaultLabSource:"LabCorp",
   homeDevices:SEED_HOME, labSources:SEED_LAB, theme:"system",
 };
-const MAX_CHART_POINTS = 150;
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 const fmtDate  = iso => new Date(iso).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
@@ -108,22 +109,6 @@ function sourceFilter(arr, mode) {
   if (mode === "home") return arr.filter(r => r.source !== "Lab");
   if (mode === "lab")  return arr.filter(r => r.source === "Lab");
   return arr;
-}
-function downsample(rows, max = MAX_CHART_POINTS) {
-  if (rows.length <= max) return { data:rows, bucketed:false };
-  const size = Math.ceil(rows.length / max);
-  const out = [];
-  for (let i = 0; i < rows.length; i += size) {
-    const chunk = rows.slice(i, i + size);
-    const avg = key => {
-      const v = chunk.map(c => c[key]).filter(x => x != null);
-      return v.length ? +(v.reduce((a,b)=>a+b,0) / v.length).toFixed(1) : null;
-    };
-    out.push({ date:chunk[Math.floor(chunk.length/2)].date,
-      ldl:avg("ldl"), hdl:avg("hdl"), tc:avg("tc"), tg:avg("tg"),
-      apob:avg("apob"), tcHdl:avg("tcHdl"), tgHdl:avg("tgHdl") });
-  }
-  return { data:out, bucketed:true, original:rows.length };
 }
 function biomarkerStats(rows, key, ldlMethod) {
   const vals = rows.map(r => metricValue(r,key,ldlMethod)).filter(v => v != null);
@@ -590,11 +575,15 @@ function ChartTooltip({ active, payload, label, bmA, bmB }) {
   if (!active || !payload?.length) return null;
   const a = BM(bmA), b = BM(bmB);
   const av = payload.find(p=>p.dataKey===bmA), bv = payload.find(p=>p.dataKey===bmB);
+  const src = payload[0]?.payload?.source;
   return (
     <div style={{background:t.card,border:`1px solid ${t.borderHi}`,borderRadius:9,
       padding:"8px 11px",boxShadow:"0 6px 24px rgba(0,0,0,0.35)",fontFamily:FONT,pointerEvents:"none"}}>
       <div style={{fontSize:10,color:t.sec,textTransform:"uppercase",letterSpacing:".4px",
-        marginBottom:6}}>{label}</div>
+        marginBottom:6}}>
+        {fmtDate(label)}
+        {src && <span> · {src === "mixed" ? "Averaged" : srcMeta(src).label}</span>}
+      </div>
       {av?.value!=null && (
         <div style={{display:"flex",alignItems:"baseline",gap:4,marginBottom:bv?4:0}}>
           <span style={{fontSize:17,fontWeight:600,color:a?.color,fontFamily:MONO}}>{av.value}</span>
@@ -1117,15 +1106,24 @@ function AddEditModal({ reading, settings, onSave, onClose }) {
 function StatCard({ label, value, provenance, color, trend, lowerBetter }) {
   const t = useT();
   let trendEl = null;
-  if (trend != null && trend !== 0) {
-    const up = trend > 0;
+  if (trend && trend.delta !== 0) {
+    const up = trend.delta > 0;
     const favorable = up !== lowerBetter;
+    /* A delta spanning two different source types is not evidence of movement,
+       so it is never coloured as improvement. The caption below names the other
+       source, which is what actually explains the number. */
+    const col = trend.crossSource ? t.sec : (favorable ? t.success : t.sec);
     trendEl = (
-      <span style={{fontSize:11,fontWeight:600,fontFamily:MONO,color:favorable?t.success:t.sec}}>
-        {up?"▲":"▼"} {Math.abs(trend)}
+      <span style={{fontSize:11,fontWeight:600,fontFamily:MONO,color:col}}>
+        {up?"▲":"▼"} {Math.abs(trend.delta)}
       </span>
     );
   }
+  /* "since Aug 12" turns an unqualified number into a measured claim: a 7-day
+     delta and an 8-month delta previously rendered identically. */
+  const since = trend
+    ? (trend.crossSource ? `vs ${trend.prevSource} ${fmtShort(trend.since)}` : `since ${fmtShort(trend.since)}`)
+    : null;
   return (
     <div style={{background:t.card,borderRadius:13,padding:"13px 14px",
       border:`1px solid ${t.border}`,borderTop:`2px solid ${color}`}}>
@@ -1135,7 +1133,10 @@ function StatCard({ label, value, provenance, color, trend, lowerBetter }) {
       </div>
       <div style={{fontSize:26,fontWeight:800,color:t.text,fontFamily:MONO,
         fontVariantNumeric:"tabular-nums",lineHeight:1}}>{value}</div>
-      <div style={{fontSize:10,color:t.muted,marginTop:5}}>{provenance}</div>
+      <div style={{fontSize:10,color:t.sec,marginTop:5,overflow:"hidden",
+        textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+        {provenance}{since ? ` · ${since}` : ""}
+      </div>
     </div>
   );
 }
@@ -1171,28 +1172,62 @@ function DashboardView({ enriched, settings, onSelect, onAdd, onViewAll }) {
   const ascending = useMemo(()=>
     [...enriched].sort((x,y)=>new Date(x.timestamp)-new Date(y.timestamp)), [enriched]);
 
-  const { data:chartData, bucketed, original } = useMemo(()=>{
+  const { data:chartData, bucketed, original, mixedSources } = useMemo(()=>{
     const scoped = sourceFilter(rangeFilter(ascending, range), srcMode);
     const rows = scoped.map(r=>({
-      date: fmtShort(r.timestamp),
+      /* A real timestamp, not a formatted label. As a category axis every gap
+         rendered the same width, so four weekly readings and a seven-month
+         silence looked alike and slope carried no meaning. */
+      t: new Date(r.timestamp).getTime(),
+      source: r.source === "Lab" ? "Lab" : "POC",
       ldl:metricValue(r,"ldl",settings.ldlMethod), hdl:r.hdl??null, tc:r.tc??null, tg:r.tg??null,
       apob:r.d.apob??null, tcHdl:r.d.tcHdl??null, tgHdl:r.d.tgHdl??null,
     }));
-    return downsample(rows);
+    return { ...downsample(rows),
+      mixedSources: rows.some(r=>r.source==="Lab") && rows.some(r=>r.source==="POC") };
   },[ascending,range,srcMode,settings.ldlMethod]);
+
+  const fit = useMemo(()=>fitTrend(
+    chartData.filter(r=>r[bmA]!=null).map(r=>({x:r.t, y:r[bmA]}))
+  ), [chartData,bmA]);
+
+  /* Source lives in the mark itself: filled for a home device, ringed for a lab
+     draw. The two disagree systematically, so a step in the line that coincides
+     with a change of mark is method rather than biology — visible at a glance
+     instead of only to a reader who already suspected it. An averaged bucket
+     spans both and claims neither. */
+  const seriesDot = color => ({ cx, cy, payload }) => {
+    if (cx == null || cy == null) return null;
+    if (payload?.source === "Lab")
+      return <circle cx={cx} cy={cy} r={3.6} fill={t.card} stroke={color} strokeWidth={1.8} />;
+    if (payload?.source === "POC")
+      return <circle cx={cx} cy={cy} r={3.5} fill={color} />;
+    return <circle cx={cx} cy={cy} r={3.2} fill={color} fillOpacity={0.45} />;
+  };
 
   const recent = useMemo(()=>
     [...enriched].sort((x,y)=>new Date(y.timestamp)-new Date(x.timestamp)).slice(0,5), [enriched]);
   const descending = useMemo(()=>
     [...enriched].sort((x,y)=>new Date(y.timestamp)-new Date(x.timestamp)), [enriched]);
 
+  /* The last two readings carrying this metric, and what separates them. A
+     delta across a source change is mostly method bias — device LDL
+     under-reports Martin-Hopkins by roughly the size of a real change between
+     tests — so the card has to be able to say which kind of delta it is. */
   const trendFor = key => {
-    const v=[];
+    const rs=[];
     for (const r of descending) {
-      const x = metricValue(r,key,settings.ldlMethod);
-      if (x!=null) { v.push(x); if (v.length===2) break; }
+      if (metricValue(r,key,settings.ldlMethod)!=null) { rs.push(r); if (rs.length===2) break; }
     }
-    return v.length===2 ? +(v[0]-v[1]).toFixed(1) : null;
+    if (rs.length!==2) return null;
+    const [now,prev] = rs;
+    const isLab = r => r.source==="Lab";
+    return {
+      delta: +(metricValue(now,key,settings.ldlMethod) - metricValue(prev,key,settings.ldlMethod)).toFixed(1),
+      since: prev.timestamp,
+      crossSource: isLab(now)!==isLab(prev),
+      prevSource: srcMeta(prev.source).label,
+    };
   };
 
   const latest = recent[0];
@@ -1225,17 +1260,35 @@ function DashboardView({ enriched, settings, onSelect, onAdd, onViewAll }) {
           <DropField caption="METRIC" value={a?.label} onClick={()=>setMetricPicker("primary")} />
           <DropField caption="COMPARE" value={bmB?b?.label:"Off"} onClick={()=>setMetricPicker("compare")} />
         </div>
-        {bmB && (
-          <div style={{display:"flex",gap:16,marginBottom:10,alignItems:"center"}}>
-            <div style={{display:"flex",alignItems:"center",gap:5}}>
-              <div style={{width:18,height:2,background:a?.color,borderRadius:1}} />
-              <span style={{fontSize:11,color:t.sec}}>{a?.label} (left)</span>
-            </div>
-            <div style={{display:"flex",alignItems:"center",gap:5}}>
-              <svg width="18" height="2"><line x1="0" y1="1" x2="18" y2="1"
-                stroke={b?.color} strokeWidth="2" strokeDasharray="4 2"/></svg>
-              <span style={{fontSize:11,color:t.sec}}>{b?.label} (right)</span>
-            </div>
+        {(bmB || (mixedSources && !bucketed)) && (
+          <div style={{display:"flex",gap:16,marginBottom:10,alignItems:"center",
+            flexWrap:"wrap",rowGap:6}}>
+            {bmB && (
+              <>
+                <div style={{display:"flex",alignItems:"center",gap:5}}>
+                  <div style={{width:18,height:2,background:a?.color,borderRadius:1}} />
+                  <span style={{fontSize:11,color:t.sec}}>{a?.label} (left)</span>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:5}}>
+                  <svg width="18" height="2"><line x1="0" y1="1" x2="18" y2="1"
+                    stroke={b?.color} strokeWidth="2" strokeDasharray="4 2"/></svg>
+                  <span style={{fontSize:11,color:t.sec}}>{b?.label} (right)</span>
+                </div>
+              </>
+            )}
+            {mixedSources && !bucketed && (
+              <div style={{display:"flex",alignItems:"center",gap:11}}>
+                <span style={{display:"flex",alignItems:"center",gap:5}}>
+                  <svg width="9" height="9"><circle cx="4.5" cy="4.5" r="3.4" fill={t.sec} /></svg>
+                  <span style={{fontSize:11,color:t.sec}}>Home</span>
+                </span>
+                <span style={{display:"flex",alignItems:"center",gap:5}}>
+                  <svg width="9" height="9"><circle cx="4.5" cy="4.5" r="3" fill={t.card}
+                    stroke={t.sec} strokeWidth="1.6" /></svg>
+                  <span style={{fontSize:11,color:t.sec}}>Lab</span>
+                </span>
+              </div>
+            )}
           </div>
         )}
 
@@ -1253,10 +1306,11 @@ function DashboardView({ enriched, settings, onSelect, onAdd, onViewAll }) {
             <ResponsiveContainer width="100%" height={216}>
               <LineChart data={chartData} margin={{top:14,right:10,bottom:6,left:4}}>
                 <CartesianGrid strokeDasharray="3 3" stroke={t.grid} vertical={false} />
-                <XAxis dataKey="date" tick={{fontSize:10,fill:t.muted,fontFamily:FONT}}
+                <XAxis dataKey="t" type="number" scale="time" domain={["dataMin","dataMax"]}
+                  tickFormatter={fmtShort} tick={{fontSize:10,fill:t.sec,fontFamily:FONT}}
                   tickLine={false} axisLine={false} interval="preserveStartEnd"
-                  minTickGap={30} tickMargin={10} />
-                <YAxis yAxisId="left" tick={{fontSize:10,fill:bmB?(a?.color):t.muted,fontFamily:FONT}}
+                  minTickGap={34} tickMargin={10} />
+                <YAxis yAxisId="left" tick={{fontSize:10,fill:bmB?(a?.color):t.sec,fontFamily:FONT}}
                   tickLine={false} axisLine={false} domain={["auto","auto"]}
                   width={40} tickMargin={6} padding={{top:6,bottom:6}} />
                 {bmB && (
@@ -1266,19 +1320,30 @@ function DashboardView({ enriched, settings, onSelect, onAdd, onViewAll }) {
                 )}
                 <Tooltip content={<ChartTooltip bmA={bmA} bmB={bmB} />}
                   allowEscapeViewBox={{x:true,y:true}} />
-                <Line yAxisId="left" type="monotone" dataKey={bmA} stroke={a?.color} strokeWidth={2.4}
-                  dot={{r:3.5,fill:a?.color,strokeWidth:0}} activeDot={{r:6}}
+                {/* Drawn before the series so the data sits on top of its own fit. */}
+                {fit && (
+                  <ReferenceLine yAxisId="left" ifOverflow="extendDomain"
+                    segment={[{x:fit.x1,y:fit.y1},{x:fit.x2,y:fit.y2}]}
+                    stroke={a?.color} strokeOpacity={0.4} strokeWidth={1.5}
+                    strokeDasharray="5 4" />
+                )}
+                {/* Straight segments between readings. A spline would draw
+                    curvature through values that were never measured. */}
+                <Line yAxisId="left" type="linear" dataKey={bmA} stroke={a?.color} strokeWidth={2.4}
+                  dot={seriesDot(a?.color)} activeDot={{r:6}}
                   connectNulls={false} isAnimationActive={false} />
                 {bmB && (
-                  <Line yAxisId="right" type="monotone" dataKey={bmB} stroke={b?.color} strokeWidth={1.5}
+                  <Line yAxisId="right" type="linear" dataKey={bmB} stroke={b?.color} strokeWidth={1.5}
                     strokeDasharray="6 3" dot={{r:2.5,fill:b?.color,strokeWidth:0}} activeDot={{r:5}}
                     connectNulls={false} isAnimationActive={false} />
                 )}
               </LineChart>
             </ResponsiveContainer>
-            {bucketed && (
-              <div style={{fontSize:10.5,color:t.muted,textAlign:"center",marginTop:2}}>
-                Averaged trend · {original} readings condensed for clarity
+            {(fit || bucketed) && (
+              <div style={{fontSize:10.5,color:t.sec,textAlign:"center",marginTop:4,lineHeight:1.5}}>
+                {fit && `Trend ${fit.change >= 0 ? "+" : "−"}${Math.abs(fit.change)}${a?.unit ? ` ${a.unit}` : ""} over ${fmtSpan(fit.days)}`}
+                {fit && bucketed && " · "}
+                {bucketed && `${original} readings averaged`}
               </div>
             )}
           </>

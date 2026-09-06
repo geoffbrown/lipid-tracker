@@ -434,6 +434,47 @@ labels, the reference-range strings, and the disclaimer note — the text that
 tells a user *which method produced the number they are looking at*. Adopting
 grip's ramp fixes this as a side effect; adopting only its layout would not.
 
+## 8.2 Trend chart — CHANGES
+
+v3.3 §Visualization carries, with the following made explicit. All of it is
+implemented.
+
+**The x-axis is a time scale.** It was a category axis keyed on a formatted date
+string, which spaced every reading equally regardless of when it happened. On a
+realistic history — weekly home tests, a seven-month gap, then a lab draw — a
+194-day interval was drawn the same width as a 7-day one, stretching short-term
+noise 5.5x and compressing the quiet stretch to nothing. Slope on that chart
+carried no meaning, which is a problem for an app whose subject is longitudinal
+change.
+
+**Source is encoded in the mark.** A filled dot is a home device, a ring is a
+lab draw, and an averaged bucket spanning both is drawn faded and claims
+neither. A legend appears only when the visible data actually mixes sources.
+
+This is the product thesis made visible. Device LDL under-reports Martin-Hopkins
+by roughly the size of a real change between tests, so a step in the line that
+coincides with a change of mark is method, not biology. Source was already shown
+in every list and detail view; the chart — the one place the bias distorts an
+inference — was the only view that hid it.
+
+**Segments are straight.** Spline interpolation drew curvature through values
+that were never measured; with readings weeks apart that is invention.
+
+**A least-squares trend line is fitted** over the visible series and drawn
+beneath it, dashed and dimmed — the "simple linear trend line" v3.3 §Interaction
+specifies and never had. It requires three points, since with two the fit merely
+retraces the segment already drawn. A caption states it in words: *"Trend −4.2
+mg/dL over 6 months"*, alongside the averaging disclosure when one applies.
+
+**The stat-card delta says what it measured.** It previously showed a bare
+number: a 7-day change and an 8-month change rendered identically, and a delta
+spanning a home-to-lab transition — mostly method bias — was coloured as
+improvement. It now names its interval ("since Aug 12"), and where the two
+readings come from different source types it names the other source instead
+("vs Lab, Aug 12") and declines to colour the change as good or bad news.
+
+---
+
 ### 8.1.5 Open question — which tokens are the source of truth?
 
 The handoff lists Figma design tokens maintained via Tokens Studio and exported
@@ -472,8 +513,10 @@ range. Two gaps remain, both recorded here so they are not mistaken for done:
   consistency, not correctness against ground truth, and reports as skipped.
   `synthetic-readings.json` is invented data and is labelled as such — it catches
   drift, it does not establish correctness.
-- Nothing outside `src/calc.js` is tested. The persistence layer, validation
-  rules and chart aggregation have no coverage.
+- The persistence layer and the validation rules have no coverage. Chart
+  aggregation is now covered by `test/chart.test.mjs` — the trend fit, span
+  wording, and the bucketing rules that keep a bucket from claiming a source it
+  does not have.
 
 ## 11. Reuse caution
 
