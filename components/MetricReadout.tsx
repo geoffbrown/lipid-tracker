@@ -56,35 +56,35 @@ export default function MetricReadout({
     <button
       onClick={onPress}
       aria-label={`${bm.label}: choose which metric to show here`}
-      className="min-w-0 px-3 py-3.5 text-left"
+      className="tile min-w-0 px-3.5 py-4 text-left"
     >
-      <span className="flex min-w-0 items-center gap-px">
-        <span
-          className="truncate text-[13px] font-semibold tracking-[0.04em]"
-          style={{ color: bm.color }}
-        >
-          {bm.label}
+      <span className="flex items-center justify-between gap-1">
+        <span className="flex min-w-0 items-center gap-px">
+          <span
+            className="truncate text-[13px] font-semibold tracking-[0.04em]"
+            style={{ color: bm.color }}
+          >
+            {bm.label}
+          </span>
+          <ChevronDown size={10} className="shrink-0 text-ink-faint" aria-hidden />
         </span>
-        <ChevronDown size={10} className="shrink-0 text-ink-faint" aria-hidden />
+        {bm.unit && (
+          <span className="shrink-0 text-[12px] text-ink-faint">{bm.unit}</span>
+        )}
       </span>
 
-      <span className="mt-1 flex items-baseline gap-1">
-        <span
-          className={`tabular text-[26px] font-semibold leading-none tracking-[-0.01em] ${
-            value == null ? "text-ink-faint" : "text-ink"
-          }`}
-        >
-          {value == null ? "—" : value}
-        </span>
-        {value != null && bm.unit && (
-          <span className="truncate text-[12px] text-ink-faint">{bm.unit}</span>
-        )}
+      <span
+        className={`tabular mt-1.5 block truncate text-[27px] font-semibold leading-none tracking-[-0.01em] ${
+          value == null ? "text-ink-faint" : "text-ink"
+        }`}
+      >
+        {value == null ? "—" : value}
       </span>
 
       {/* Where this value sits against its reference thresholds. No numbers —
           the position is the point, and a lipid value only means something
           relative to its range. */}
-      <span className="relative mt-3 block h-[9px] w-full" aria-hidden>
+      <span className="relative mt-3.5 block h-[9px] w-full" aria-hidden>
         <span className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-line-strong" />
         {/* Thresholds cross the rule, so they read as a scale rather than as
             decoration. Without them the marker's position means nothing. */}
@@ -103,7 +103,7 @@ export default function MetricReadout({
         )}
       </span>
 
-      <span className="mt-2.5 block text-[13px] leading-tight text-ink-soft">{provenance}</span>
+      <span className="mt-3 block text-[13px] leading-tight text-ink-soft">{provenance}</span>
       {trend && trend.delta !== 0 && (
         <span className="mt-1 block truncate text-[13px] text-ink-soft">
           <span className={`tabular font-semibold ${trendClass}`}>

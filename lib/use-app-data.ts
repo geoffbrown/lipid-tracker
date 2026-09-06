@@ -39,6 +39,24 @@ export function useAppData() {
     })();
   }, []);
 
+  /* Mutations live beside the reads so every screen sees the same state without
+     a refetch, and so nothing has to remember to re-sort. */
+  const saveReading = useCallback(
+    async (data: Omit<Reading, "id"> & { id?: string }) => {
+      const saved = await getReadingStore().save(data);
+      setReadings((rows) => {
+        const next = (rows ?? []).filter((r) => r.id !== saved.id).concat(saved);
+        return next.sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp));
+      });
+    },
+    [],
+  );
+
+  const deleteReading = useCallback(async (id: string) => {
+    await getReadingStore().remove(id);
+    setReadings((rows) => (rows ?? []).filter((r) => r.id !== id));
+  }, []);
+
   const saveProfile = useCallback(
     async (patch: Partial<Profile>) => {
       setProfile((p) => ({ ...p, ...patch }));
@@ -119,7 +137,7 @@ export function useAppData() {
     loading: readings === null,
     needsOnboarding,
     readings: readings ?? [],
-    profile, saveProfile,
+    profile, saveProfile, saveReading, deleteReading,
     enriched, descending,
     latestFor, trendFor, provenanceFor, rowMetrics,
   };

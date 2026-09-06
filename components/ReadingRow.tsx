@@ -23,10 +23,10 @@ export default function ReadingRow({
   return (
     <button
       onClick={() => onSelect(reading)}
-      className="flex w-full items-center justify-between gap-3 px-3 py-4 text-left"
+      className="tile flex w-full items-center justify-between gap-3 px-3.5 py-4 text-left"
     >
       <span className="min-w-0 flex-1">
-        <span className="mb-1.5 flex min-w-0 items-center gap-1.5">
+        <span className="mb-2 flex min-w-0 items-center gap-1.5">
           <SourceBadge source={reading.source} />
           <span className="whitespace-nowrap text-ink-soft">{fmtDate(reading.timestamp)}</span>
           {reading.sourceName && (

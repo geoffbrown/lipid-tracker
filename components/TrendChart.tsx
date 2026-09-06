@@ -6,6 +6,7 @@ import {
 } from "recharts";
 import { ChevronDown } from "lucide-react";
 import Segmented from "./Segmented";
+import SelectSheet from "./SelectSheet";
 import { BM, BMS, RANGES, type Range } from "@/lib/biomarkers";
 import { downsample, fitTrend, fmtSpan } from "@/lib/chart.js";
 import { metricValue } from "@/lib/calc.js";
@@ -45,14 +46,14 @@ const SRC_OPTIONS = [
 ];
 
 export default function TrendChart({
-  enriched, ldlMethod, onPickMetric,
+  enriched, ldlMethod,
 }: {
   enriched: Enriched[];
   ldlMethod: LdlMethod;
-  onPickMetric: (slot: "primary" | "compare") => void;
 }) {
   const [bmA, setBmA] = useState("ldl");
-  const [bmB] = useState<string | null>(null);
+  const [bmB, setBmB] = useState<string | null>(null);
+  const [picking, setPicking] = useState<"primary" | "compare" | null>(null);
   const [range, setRange] = useState<Range>("All");
   const [srcMode, setSrcMode] = useState<SrcMode>("all");
   const a = BM(bmA), b = bmB ? BM(bmB) : undefined;
@@ -101,30 +102,37 @@ export default function TrendChart({
   const enough = chartData.filter((r: Row) => r[bmA] != null).length >= 2;
 
   return (
-    <section className="card mt-3.5 px-4 py-4">
+    <section className="tile mt-4 px-4 py-5">
       <div className="flex flex-wrap items-baseline gap-2">
-        <button
-          onClick={() => { setBmA(bmA); onPickMetric("primary"); }}
-          className="inline-flex items-center gap-1"
-        >
+        <button onClick={() => setPicking("primary")} className="inline-flex items-center gap-1">
           <span className="text-[20px] font-bold" style={{ color: a?.color }}>{a?.label}</span>
           <ChevronDown size={16} className="text-ink-soft" aria-hidden />
         </button>
-        <button onClick={() => onPickMetric("compare")} className="text-[15px] text-ink-soft">
-          + Compare
-        </button>
+        {/* The names carry their series colours and the axes already match them,
+            so the header is the legend — there is no separate one. */}
+        {bmB ? (
+          <button onClick={() => setPicking("compare")} className="inline-flex items-center gap-1">
+            <span className="text-[15px] text-ink-soft">vs</span>
+            <span className="text-[15px] font-bold" style={{ color: b?.color }}>{b?.label}</span>
+            <ChevronDown size={13} className="text-ink-soft" aria-hidden />
+          </button>
+        ) : (
+          <button onClick={() => setPicking("compare")} className="text-[15px] text-ink-soft">
+            + Compare
+          </button>
+        )}
       </div>
 
       {/* The chart's conclusion, stated beside its subject rather than floating
           under the plot. */}
-      <p className="mt-0.5 mb-4 text-[15px] leading-snug text-ink-soft">
+      <p className="mt-1 mb-5 text-[15px] leading-snug text-ink-soft">
         {fit
           ? `${fit.change >= 0 ? "Up" : "Down"} ${Math.abs(fit.change)}${a?.unit ? ` ${a.unit}` : ""} over ${fmtSpan(fit.days)}`
           : "Not enough readings yet to show a trend"}
         {bucketed && ` · ${original} readings averaged`}
       </p>
 
-      <div className="mb-4">
+      <div className="mb-5">
         <Segmented options={SRC_OPTIONS} value={srcMode} onChange={setSrcMode} ariaLabel="Source" />
       </div>
 
@@ -145,8 +153,17 @@ export default function TrendChart({
             <YAxis
               yAxisId="left" domain={["auto", "auto"]} width={40} tickLine={false} axisLine={false}
               tickMargin={6} padding={{ top: 6, bottom: 6 }}
-              tick={{ fontSize: 15, fill: "var(--color-ink-soft)" }}
+              tick={{ fontSize: 15, fill: bmB ? a?.color : "var(--color-ink-soft)" }}
             />
+            {/* Separate axes when comparing: LDL (~100 mg/dL) against TG/HDL
+                (~2.0) on one scale flattens the ratio onto the floor. */}
+            {bmB && (
+              <YAxis
+                yAxisId="right" orientation="right" domain={["auto", "auto"]} width={40}
+                tickLine={false} axisLine={false} tickMargin={6} padding={{ top: 6, bottom: 6 }}
+                tick={{ fontSize: 15, fill: b?.color }}
+              />
+            )}
             <Tooltip
               allowEscapeViewBox={{ x: false, y: false }}
               wrapperStyle={{ zIndex: 5 }}
@@ -172,16 +189,42 @@ export default function TrendChart({
               dot={seriesDot(a?.color ?? "")} activeDot={{ r: 6 }}
               connectNulls={false} isAnimationActive={false}
             />
+            {bmB && (
+              <Line
+                yAxisId="right" type="linear" dataKey={bmB} stroke={b?.color} strokeWidth={1.5}
+                strokeDasharray="6 3" dot={{ r: 2.5, fill: b?.color, strokeWidth: 0 }}
+                activeDot={{ r: 5 }} connectNulls={false} isAnimationActive={false}
+              />
+            )}
           </LineChart>
         </ResponsiveContainer>
       )}
 
-      <div className="mt-4 flex justify-center">
+      <div className="mt-5 flex justify-center">
         <Segmented
           options={RANGES.map((r) => ({ value: r, label: r }))}
           value={range} onChange={setRange} ariaLabel="Time range"
         />
       </div>
+
+      {picking && (
+        <SelectSheet
+          title={picking === "primary" ? "Chart metric" : "Compare with"}
+          options={
+            picking === "primary"
+              ? BMS.map((m) => ({ value: m.key, label: m.label }))
+              : [{ value: "__off", label: "Off", sub: "Show a single metric" },
+                 ...BMS.filter((m) => m.key !== bmA).map((m) => ({ value: m.key, label: m.label }))]
+          }
+          current={picking === "primary" ? bmA : bmB ?? "__off"}
+          onSelect={(v) => {
+            if (picking === "primary") { if (v === bmB) setBmB(null); setBmA(v); }
+            else setBmB(v === "__off" ? null : v);
+            setPicking(null);
+          }}
+          onClose={() => setPicking(null)}
+        />
+      )}
     </section>
   );
 }

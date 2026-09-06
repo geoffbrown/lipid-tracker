@@ -1,11 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import ReadingRow from "@/components/ReadingRow";
 import BottomNav from "@/components/BottomNav";
 import Segmented from "@/components/Segmented";
-import { useAppData } from "@/lib/use-app-data";
+import ReadingDetail from "@/components/ReadingDetail";
+import AddEditSheet from "@/components/AddEditSheet";
+import { useAppData, type Enriched } from "@/lib/use-app-data";
+import type { Reading } from "@/lib/types";
 
 type SrcMode = "all" | "home" | "lab";
 
@@ -14,10 +17,15 @@ const fmtMonth = (iso: string) =>
 
 export default function HistoryPage() {
   const router = useRouter();
-  const { loading, needsOnboarding, descending, rowMetrics } = useAppData();
+  const { loading, needsOnboarding, descending, rowMetrics, profile, saveReading, deleteReading } =
+    useAppData();
   const [srcMode, setSrcMode] = useState<SrcMode>("all");
+  const [detail, setDetail] = useState<Enriched | null>(null);
+  const [editing, setEditing] = useState<Reading | null | undefined>(undefined);
 
-  if (needsOnboarding) router.replace("/onboarding");
+  useEffect(() => {
+    if (needsOnboarding) router.replace("/onboarding");
+  }, [needsOnboarding, router]);
 
   const scoped = useMemo(
     () =>
@@ -62,19 +70,37 @@ export default function HistoryPage() {
         ) : (
           groups.map(([month, rows]) => (
             <section key={month}>
-              <h2 className="mt-7 mb-1 flex items-baseline justify-between px-3 text-[13px] font-semibold tracking-[0.04em] text-ink-faint">
+              <h2 className="mt-8 mb-2.5 flex items-baseline justify-between px-1 text-[13px] font-semibold tracking-[0.04em] text-ink-faint">
                 {month}
                 <span>{rows.length}</span>
               </h2>
-              <div className="divide-y divide-line border-y border-line">
+              <div className="flex flex-col gap-2">
                 {rows.map((r) => (
-                  <ReadingRow key={r.id} reading={r} metrics={rowMetrics(r)} onSelect={() => {}} />
+                  <ReadingRow key={r.id} reading={r} metrics={rowMetrics(r)} onSelect={() => setDetail(r)} />
                 ))}
               </div>
             </section>
           ))
         )}
       </main>
+
+      {detail && (
+        <ReadingDetail
+          reading={detail}
+          profile={profile}
+          onEdit={() => { setEditing(detail); setDetail(null); }}
+          onDelete={() => deleteReading(detail.id)}
+          onClose={() => setDetail(null)}
+        />
+      )}
+      {editing !== undefined && (
+        <AddEditSheet
+          reading={editing}
+          profile={profile}
+          onSave={saveReading}
+          onClose={() => setEditing(undefined)}
+        />
+      )}
       <BottomNav />
     </>
   );

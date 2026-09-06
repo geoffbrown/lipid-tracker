@@ -107,6 +107,15 @@ body {
 /* Figures line up in columns throughout — a font feature, not a second face. */
 .tabular { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
 
+/* One surface treatment, shared by the metric modules and the reading rows so
+   they read as the same kind of object. A fill and a radius are enough to say
+   "separate thing" — the border that usually comes with them was adding a rule
+   to every edge, and a page framed in hairlines reads sparse and busy at once. */
+.tile {
+  background: var(--color-paper);
+  border-radius: 0.875rem;
+}
+
 .card {
   background: var(--color-paper);
   border: 1px solid var(--color-line);

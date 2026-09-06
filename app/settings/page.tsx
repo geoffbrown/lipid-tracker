@@ -44,10 +44,10 @@ export default function SettingsPage() {
 
   const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <section>
-      <h2 className="mt-8 mb-1 px-3 text-[13px] font-semibold tracking-[0.04em] text-ink-faint">
+      <h2 className="mt-8 mb-2.5 px-1 text-[13px] font-semibold tracking-[0.04em] text-ink-faint">
         {title}
       </h2>
-      <div className="divide-y divide-line border-y border-line">{children}</div>
+      <div className="tile divide-y divide-line overflow-hidden">{children}</div>
     </section>
   );
 
