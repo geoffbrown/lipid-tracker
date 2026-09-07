@@ -112,6 +112,7 @@ interface ProfileRow {
   home_devices: string[] | null;
   lab_sources: string[] | null;
   cards: string[] | null;
+  theme: Profile["theme"];
   onboarded_at: string | null;
 }
 
@@ -123,7 +124,7 @@ export class SupabaseProfileStore implements ProfileStore {
       .from("profiles")
       .select(
         "ldl_method, apob_method, lpa, lpa_unit, default_source, default_device, " +
-          "default_lab_source, home_devices, lab_sources, cards, onboarded_at",
+          "default_lab_source, home_devices, lab_sources, cards, theme, onboarded_at",
       )
       .maybeSingle();
     if (error) throw error;
@@ -146,6 +147,7 @@ export class SupabaseProfileStore implements ProfileStore {
       ...(row.home_devices?.length ? { homeDevices: row.home_devices } : {}),
       ...(row.lab_sources?.length ? { labSources: row.lab_sources } : {}),
       cards: row.cards ?? [],
+      theme: row.theme,
       onboardedAt: row.onboarded_at,
     };
   }
@@ -156,7 +158,8 @@ export class SupabaseProfileStore implements ProfileStore {
       ldlMethod: "ldl_method", apobMethod: "apob_method", lpa: "lpa",
       lpaUnit: "lpa_unit", defaultSource: "default_source", defaultDevice: "default_device",
       defaultLabSource: "default_lab_source", homeDevices: "home_devices",
-      labSources: "lab_sources", cards: "cards", onboardedAt: "onboarded_at",
+      labSources: "lab_sources", cards: "cards", theme: "theme",
+      onboardedAt: "onboarded_at",
     };
     for (const [key, column] of Object.entries(map))
       if (patch[key as keyof Profile] !== undefined) row[column] = patch[key as keyof Profile];

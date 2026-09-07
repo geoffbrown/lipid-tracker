@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { getProfileStore, getReadingStore } from "./store";
 import { DEFAULT_PROFILE, type Profile, type Reading } from "./types";
 import { BM } from "./biomarkers";
+import { getTheme, setTheme } from "./theme";
 import { calcDerived, getDispLDL, metricValue } from "./calc.js";
 
 export type Derived = ReturnType<typeof calcDerived>;
@@ -61,6 +62,12 @@ export function useAppData() {
           getProfileStore().get(),
         ]);
         const merged = { ...DEFAULT_PROFILE, ...(saved ?? {}) };
+        /* The account's theme wins over whatever this browser last had. The
+           pre-paint script has already painted from the local mirror, so this
+           only does work when the two disagree — i.e. the choice was made on
+           another device. Writing it back keeps the mirror right for the next
+           first paint here. */
+        if (merged.theme !== getTheme()) setTheme(merged.theme);
         cache = {
           readings: rows,
           profile: merged,
