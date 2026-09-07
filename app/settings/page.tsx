@@ -1,13 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, FileText } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Download, FileText, KeyRound, LogOut, Monitor, UserRound } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import Segmented from "@/components/Segmented";
+import Sheet from "@/components/Sheet";
 import { useAppData } from "@/lib/use-app-data";
 import { getReadingStore } from "@/lib/store";
 import { downloadCSV } from "@/lib/csv";
 import { getTheme, setTheme, type ThemeChoice } from "@/lib/theme";
+import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { MH_TABLE_IS_APPROXIMATE } from "@/lib/calc.js";
 import type { ApobMethod, LdlMethod, LpaUnit } from "@/lib/types";
 
@@ -21,18 +25,120 @@ const APOB_OPTS: { value: ApobMethod; label: string; sub: string }[] = [
   { value: "aggressive", label: "Aggressive", sub: "Risk-weighted, yields a higher estimate" },
 ];
 
+/**
+ * Change password.
+ *
+ * This is the only way the password is ever set after the account is created —
+ * there is no reset-by-email flow, deliberately (see app/login/page.tsx). It
+ * requires an active session, which is why it lives here and not on /login.
+ */
+function PasswordSheet({ onClose }: { onClose: () => void }) {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [status, setStatus] = useState<"idle" | "saving" | "done">("idle");
+  const [error, setError] = useState("");
+
+  async function save() {
+    if (password.length < 8) {
+      setError("Use at least 8 characters.");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Passwords don't match.");
+      return;
+    }
+    setStatus("saving");
+    setError("");
+    try {
+      const { error } = await createClient().auth.updateUser({ password });
+      if (error) throw error;
+      setStatus("done");
+      window.setTimeout(onClose, 900);
+    } catch (err) {
+      setStatus("idle");
+      setError(err instanceof Error ? err.message : "Couldn't update password.");
+    }
+  }
+
+  const inputCls =
+    "w-full rounded-lg border border-line bg-canvas px-3 py-2.5 text-base outline-none transition-colors focus:border-ink";
+
+  return (
+    <Sheet title="Change password" onClose={onClose}>
+      <label htmlFor="new-password" className="mt-2 mb-1.5 block text-ink-soft">
+        New password
+      </label>
+      <input
+        id="new-password"
+        type="password"
+        autoComplete="new-password"
+        placeholder="At least 8 characters"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className={inputCls}
+      />
+
+      <label htmlFor="confirm-password" className="mt-3 mb-1.5 block text-ink-soft">
+        Confirm new password
+      </label>
+      <input
+        id="confirm-password"
+        type="password"
+        autoComplete="new-password"
+        placeholder="Type it again"
+        value={confirm}
+        onChange={(e) => setConfirm(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && save()}
+        className={inputCls}
+      />
+
+      {error && (
+        <p role="alert" className="mt-2 text-danger">
+          {error}
+        </p>
+      )}
+      {status === "done" && <p className="mt-2 text-success">Password updated.</p>}
+
+      <button
+        type="button"
+        onClick={save}
+        disabled={status !== "idle"}
+        className="pressable mt-4 w-full rounded-lg bg-strong py-3 font-bold text-on-strong disabled:opacity-50"
+      >
+        {status === "saving" ? "Saving…" : status === "done" ? "Saved" : "Update password"}
+      </button>
+    </Sheet>
+  );
+}
+
 export default function SettingsPage() {
   const { loading, readings, profile, saveProfile } = useAppData();
+  const router = useRouter();
   const [theme, setThemeState] = useState<ThemeChoice>("auto");
   const [lpa, setLpa] = useState("");
   const [confirmClear, setConfirmClear] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
+  const [passwordSheet, setPasswordSheet] = useState(false);
+  const configured = isSupabaseConfigured();
 
   useEffect(() => setThemeState(getTheme()), []);
   useEffect(() => setLpa(profile.lpa == null ? "" : String(profile.lpa)), [profile.lpa]);
 
+  useEffect(() => {
+    if (!configured) return;
+    createClient()
+      .auth.getUser()
+      .then(({ data }) => setEmail(data.user?.email ?? null));
+  }, [configured]);
+
+  async function signOut() {
+    await createClient().auth.signOut();
+    router.replace("/login");
+  }
+
   if (loading) return <main className="grid min-h-screen place-items-center text-ink-soft">Loading…</main>;
 
-  const Row = ({ label, sub, right }: { label: string; sub?: string; right?: React.ReactNode }) => (
+  const Row = ({ label, sub, right }: { label: React.ReactNode; sub?: string; right?: React.ReactNode }) => (
     <div className="flex items-center justify-between gap-4 px-4 py-4">
       <div className="min-w-0">
         <div>{label}</div>
@@ -164,6 +270,42 @@ export default function SettingsPage() {
           </button>
         </Section>
 
+        <Section title="Account">
+          {configured ? (
+            <>
+              <Row
+                label={
+                  <span className="inline-flex items-center gap-2">
+                    <UserRound size={17} aria-hidden /> Signed in
+                  </span>
+                }
+                sub={email ?? "Loading…"}
+              />
+              <button
+                onClick={() => setPasswordSheet(true)}
+                className="pressable-row flex w-full items-center gap-2 px-4 py-4 text-left transition-colors"
+              >
+                <KeyRound size={17} aria-hidden /> Change password
+              </button>
+              <button
+                onClick={signOut}
+                className="pressable-row flex w-full items-center gap-2 px-4 py-4 text-left transition-colors"
+              >
+                <LogOut size={17} aria-hidden /> Sign out
+              </button>
+            </>
+          ) : (
+            <Row
+              label={
+                <span className="inline-flex items-center gap-2">
+                  <Monitor size={17} aria-hidden /> This device only
+                </span>
+              }
+              sub="No backend configured. Export CSV as a backup."
+            />
+          )}
+        </Section>
+
         <Section title="Data">
           <button
             onClick={() => setConfirmClear(true)}
@@ -208,6 +350,9 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+
+      {passwordSheet && <PasswordSheet onClose={() => setPasswordSheet(false)} />}
+
       <BottomNav />
     </>
   );

@@ -3,8 +3,12 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Completes a magic-link sign-in. Supabase hands back one of two shapes
- * depending on the project's email template:
+ * Completes any emailed-link sign-in. Normal sign-in is email + password and
+ * never comes through here — this route exists for the links Supabase can still
+ * send (a dashboard-issued invite, or a password reset if one is ever added).
+ *
+ * Supabase hands back one of two shapes depending on the project's email
+ * template:
  *   PKCE      -> ?code=...              (exchangeCodeForSession)
  *   Email OTP -> ?token_hash=...&type=  (verifyOtp)
  * Both are handled so the link works whichever template is configured.
