@@ -186,6 +186,14 @@ body {
 html { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
 button, a, [role="button"], input, select, textarea, label { touch-action: manipulation; }
 
+/* Form controls carry a browser-default intrinsic width of roughly twenty
+   characters. Used directly as a flex or grid item, `min-width: auto` turns
+   that into a floor the track cannot go below, and the control pushes its
+   container wider than the screen. Zeroing it once here is cheaper than
+   remembering `min-w-0` at every call site — this is the same trap that
+   clipped the stat cards and the Lp(a) field. */
+input, select, textarea { min-width: 0; }
+
 @layer base {
   button:not(:disabled), [role="button"]:not(:disabled), label[for], summary,
   select:not(:disabled) { cursor: pointer; }

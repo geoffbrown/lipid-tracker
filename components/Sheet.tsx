@@ -97,7 +97,7 @@ export default function Sheet({
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
         onAnimationEnd={(e) => { if (e.target === e.currentTarget && !closing) setEntered(true); }}
-        className={`flex max-h-[92vh] w-full max-w-[600px] flex-col rounded-t-2xl bg-canvas outline-none ${
+        className={`flex max-h-[92vh] w-full min-w-0 max-w-[600px] flex-col rounded-t-2xl bg-canvas outline-none ${
           closing ? "sheet-out" : entered ? "" : "sheet-in"
         }`}
         style={{
@@ -127,7 +127,19 @@ export default function Sheet({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6">{children}</div>
+        {/* Vertical only. `overflow-y: auto` alone computes `overflow-x: auto`,
+            so any stray pixel of width makes the whole sheet pannable sideways
+            — and iOS rubber-bands well past it, which reads as the sheet coming
+            loose. touch-action pins the gesture too, so a diagonal swipe scrolls
+            rather than drifting; nothing in a sheet scrolls horizontally.
+            pinch-zoom stays listed — dropping it would take magnification away
+            from anyone who needs it to read the field labels. */}
+        <div
+          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-4 pb-6"
+          style={{ touchAction: "pan-y pinch-zoom" }}
+        >
+          {children}
+        </div>
         {footer && <div className="shrink-0 border-t border-line px-4 pb-4 pt-4">{footer}</div>}
       </div>
     </div>

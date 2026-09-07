@@ -141,7 +141,7 @@ export default function AddEditSheet({
               key={s}
               onClick={() => setSource(s)}
               aria-pressed={f.source === s}
-              className={`flex-1 rounded-lg border py-2.5 font-semibold ${
+              className={`min-w-0 flex-1 rounded-lg border py-2.5 font-semibold ${
                 f.source === s ? "border-strong bg-paper-2" : "border-line"
               }`}
             >
@@ -159,7 +159,7 @@ export default function AddEditSheet({
 
         <div className="mt-4 grid grid-cols-2 gap-3">
           {FIELDS.map((fl) => (
-            <div key={fl.key}>
+            <div key={fl.key} className="min-w-0">
               <label className="mb-1 block text-ink-soft" htmlFor={`ll-${fl.key}`}>{fl.label}</label>
               <input
                 id={`ll-${fl.key}`} type="number" inputMode="decimal" placeholder="mg/dL"
@@ -172,7 +172,7 @@ export default function AddEditSheet({
           {/* Manual ApoB is accepted for lab draws only; a home device does not
               measure it, so offering the field there would invite fiction. */}
           {f.source === "Lab" && (
-            <div>
+            <div className="min-w-0">
               <label className="mb-1 block text-ink-soft" htmlFor="ll-apob">ApoB (measured)</label>
               <input
                 id="ll-apob" type="number" inputMode="decimal" placeholder="mg/dL"
