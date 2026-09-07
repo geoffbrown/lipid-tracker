@@ -95,6 +95,61 @@
   }
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   Motion.
+
+   Two easings and four durations, and nothing invents its own. The sheet curve
+   is the decelerating one native sheets use: fast at the start, settling slowly,
+   so the panel reads as having been thrown rather than played back.
+
+   Everything here is disabled wholesale under prefers-reduced-motion, further
+   down. Nothing in the app depends on motion to be understood.
+   ───────────────────────────────────────────────────────────────────────────── */
+@theme {
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);   /* decelerate, native sheet */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);    /* general UI */
+
+  --dur-press: 110ms;    /* touch feedback — must feel instant */
+  --dur-fast: 160ms;     /* colour, opacity */
+  --dur-enter: 340ms;    /* a surface arriving */
+  --dur-exit: 220ms;     /* leaving is quicker than arriving */
+}
+
+/* Enter and exit are separate @keyframes on purpose. Reusing one name and
+   flipping `direction: reverse` does not restart the animation — the browser
+   sees the same animation-name, jumps straight to the filled end state, and
+   never fires animationend. The exit then neither animates nor unmounts. */
+@keyframes backdrop-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes backdrop-out { from { opacity: 1 } to { opacity: 0 } }
+
+@keyframes sheet-in { from { transform: translateY(100%) } to { transform: translateY(0) } }
+@keyframes sheet-out { from { transform: translateY(0) } to { transform: translateY(100%) } }
+
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97) }
+  to   { opacity: 1; transform: translateY(0) scale(1) }
+}
+@keyframes dialog-out {
+  from { opacity: 1; transform: translateY(0) scale(1) }
+  to   { opacity: 0; transform: translateY(8px) scale(0.97) }
+}
+
+.backdrop-in  { animation: backdrop-in var(--dur-enter) var(--ease-standard) both; }
+.backdrop-out { animation: backdrop-out var(--dur-exit) var(--ease-standard) both; }
+.sheet-in     { animation: sheet-in var(--dur-enter) var(--ease-sheet) both; }
+.sheet-out    { animation: sheet-out var(--dur-exit) var(--ease-standard) both; }
+.dialog-in    { animation: dialog-in var(--dur-enter) var(--ease-sheet) both; }
+.dialog-out   { animation: dialog-out var(--dur-exit) var(--ease-standard) both; }
+
+/* Touch feedback. A native control acknowledges the finger before anything
+   else happens; without it every tap feels like it may not have registered. */
+.pressable {
+  transition: transform var(--dur-press) var(--ease-standard),
+              background-color var(--dur-fast) var(--ease-standard);
+}
+.pressable:active { transform: scale(0.978); }
+.pressable-row:active { background-color: var(--color-paper-2); }
+
 html, body { background: var(--color-canvas); color: var(--color-ink); }
 body {
   font-family: var(--font-sans);
@@ -142,5 +197,9 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
+  /* Sheets still arrive, they just do not travel. */
+  .sheet-in, .sheet-out, .dialog-in, .dialog-out { animation: none !important; }
+  .pressable:active { transform: none; }
 }

@@ -50,7 +50,7 @@ export default function HistoryPage() {
 
   return (
     <>
-      <main className="mx-auto max-w-[600px] px-3 pb-24">
+      <main className="mx-auto max-w-[600px] px-4 pb-28">
         <header className="flex items-baseline justify-between py-4">
           <h1 className="text-xl font-extrabold tracking-tight">History</h1>
           <span className="text-ink-soft">{scoped.length} readings</span>

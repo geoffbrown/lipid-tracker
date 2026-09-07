@@ -109,13 +109,13 @@ export default function ReadingDetail({
         <div className="mt-5 flex gap-2">
           <button
             onClick={onEdit}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-line py-3 font-semibold"
+            className="pressable flex flex-1 items-center justify-center gap-2 rounded-lg border border-line py-3 font-semibold"
           >
             <Pencil size={16} aria-hidden /> Edit
           </button>
           <button
             onClick={() => setConfirming(true)}
-            className="flex items-center justify-center gap-2 rounded-lg border border-line px-4 py-3 font-semibold text-danger"
+            className="pressable flex items-center justify-center gap-2 rounded-lg border border-line px-4 py-3 font-semibold text-danger"
           >
             <Trash2 size={16} aria-hidden /> Delete
           </button>

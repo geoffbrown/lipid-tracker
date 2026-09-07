@@ -33,7 +33,7 @@ export default function SettingsPage() {
   if (loading) return <main className="grid min-h-screen place-items-center text-ink-soft">Loading…</main>;
 
   const Row = ({ label, sub, right }: { label: string; sub?: string; right?: React.ReactNode }) => (
-    <div className="flex items-center justify-between gap-4 px-3 py-4">
+    <div className="flex items-center justify-between gap-4 px-4 py-4">
       <div className="min-w-0">
         <div>{label}</div>
         {sub && <div className="mt-0.5 text-ink-soft">{sub}</div>}
@@ -53,7 +53,7 @@ export default function SettingsPage() {
 
   return (
     <>
-      <main className="mx-auto max-w-[600px] px-3 pb-24">
+      <main className="mx-auto max-w-[600px] px-4 pb-28">
         <h1 className="py-4 text-xl font-extrabold tracking-tight">Settings</h1>
 
         <Section title="Appearance">
@@ -79,7 +79,7 @@ export default function SettingsPage() {
             <button
               key={o.value}
               onClick={() => saveProfile({ ldlMethod: o.value })}
-              className="flex w-full items-center justify-between gap-4 px-3 py-4 text-left"
+              className="pressable-row flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition-colors"
             >
               <span className="min-w-0">
                 <span className={`block ${profile.ldlMethod === o.value ? "font-bold" : ""}`}>
@@ -93,7 +93,7 @@ export default function SettingsPage() {
         </Section>
 
         {MH_TABLE_IS_APPROXIMATE && (
-          <p className="mt-2 px-3 leading-relaxed text-ink-soft">
+          <p className="mt-2 px-4 leading-relaxed text-ink-soft">
             The published Martin-Hopkins method selects its divisor from triglycerides and
             non-HDL cholesterol together. This build selects on triglycerides alone, so its
             values are close to the method but not identical to it. Neither estimate is shown
@@ -106,7 +106,7 @@ export default function SettingsPage() {
             <button
               key={o.value}
               onClick={() => saveProfile({ apobMethod: o.value })}
-              className="flex w-full items-center justify-between gap-4 px-3 py-4 text-left"
+              className="pressable-row flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition-colors"
             >
               <span className="min-w-0">
                 <span className={`block ${profile.apobMethod === o.value ? "font-bold" : ""}`}>
@@ -120,7 +120,7 @@ export default function SettingsPage() {
         </Section>
 
         <Section title="Lp(a)">
-          <div className="px-3 py-4">
+          <div className="px-4 py-4">
             <p className="leading-relaxed text-ink-soft">
               Lp(a) is genetic and stable over time, so it is stored once here rather than per
               reading. It appears as context on every reading.
@@ -143,7 +143,7 @@ export default function SettingsPage() {
               />
               <button
                 onClick={() => saveProfile({ lpa: lpa === "" ? null : Number(lpa) })}
-                className="shrink-0 rounded-lg bg-strong px-4 font-bold text-on-strong"
+                className="pressable shrink-0 rounded-lg bg-strong px-4 font-bold text-on-strong"
               >
                 Save
               </button>
@@ -155,7 +155,7 @@ export default function SettingsPage() {
           <button
             onClick={() => downloadCSV(readings, profile.apobMethod)}
             disabled={readings.length === 0}
-            className="flex w-full items-center justify-between gap-3 px-3 py-4 text-left disabled:opacity-50"
+            className="pressable-row flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors disabled:opacity-50"
           >
             <span className="inline-flex items-center gap-2">
               <Download size={17} aria-hidden /> Export CSV
@@ -167,14 +167,14 @@ export default function SettingsPage() {
         <Section title="Data">
           <button
             onClick={() => setConfirmClear(true)}
-            className="flex w-full items-center justify-between px-3 py-4 text-left text-danger"
+            className="pressable-row flex w-full items-center justify-between px-4 py-4 text-left text-danger transition-colors"
           >
             Clear all data
           </button>
         </Section>
 
         <Section title="Legal">
-          <div className="flex gap-3 px-3 py-4 text-ink-soft">
+          <div className="flex gap-3 px-4 py-4 text-ink-soft">
             <FileText size={17} className="mt-0.5 shrink-0" aria-hidden />
             <p className="leading-relaxed">
               For informational purposes only. Does not replace professional medical advice.

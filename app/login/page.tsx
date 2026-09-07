@@ -48,7 +48,7 @@ export default function LoginPage() {
             </p>
             <a
               href="/"
-              className="mt-4 block rounded-lg bg-strong px-4 py-3 text-center font-bold text-on-strong"
+              className="pressable mt-4 block rounded-lg bg-strong px-4 py-3 text-center font-bold text-on-strong"
             >
               Continue
             </a>
@@ -62,7 +62,7 @@ export default function LoginPage() {
             </p>
             <button
               onClick={() => setSent(false)}
-              className="mt-4 w-full rounded-lg border border-line py-2.5 font-semibold"
+              className="pressable mt-4 w-full rounded-lg border border-line py-2.5 font-semibold"
             >
               Use a different email
             </button>
@@ -87,7 +87,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={!valid || busy}
-              className="mt-4 w-full rounded-lg bg-strong py-3 font-bold text-on-strong disabled:opacity-50"
+              className="pressable mt-4 w-full rounded-lg bg-strong py-3 font-bold text-on-strong disabled:opacity-50"
             >
               {busy ? "Sending…" : "Email me a sign-in link"}
             </button>

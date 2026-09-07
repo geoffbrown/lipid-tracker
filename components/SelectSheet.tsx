@@ -26,7 +26,7 @@ export default function SelectSheet<T extends string>({
           <button
             key={o.value}
             onClick={() => onSelect(o.value)}
-            className="flex w-full items-center justify-between gap-4 px-3 py-4 text-left"
+            className="pressable-row flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition-colors"
           >
             <span className="min-w-0">
               <span className={`block ${o.value === current ? "font-bold" : ""}`}>{o.label}</span>

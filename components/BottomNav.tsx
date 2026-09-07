@@ -26,11 +26,17 @@ export default function BottomNav() {
               key={href}
               href={href}
               aria-current={on ? "page" : undefined}
-              className={`flex flex-1 flex-col items-center gap-1 py-2.5 ${
+              className={`flex flex-1 flex-col items-center gap-1 py-2.5 transition-colors duration-[var(--dur-fast)] ${
                 on ? "font-bold text-ink" : "text-ink-soft"
               }`}
             >
-              <Icon size={19} strokeWidth={on ? 2.4 : 2} aria-hidden />
+              <Icon
+                size={19}
+                strokeWidth={on ? 2.4 : 2}
+                aria-hidden
+                className="transition-transform duration-[var(--dur-fast)] ease-[var(--ease-standard)]"
+                style={{ transform: on ? "translateY(-1px) scale(1.06)" : "none" }}
+              />
               <span className="text-[13px]">{label}</span>
             </Link>
           );

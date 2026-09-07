@@ -102,7 +102,7 @@ export default function TrendChart({
   const enough = chartData.filter((r: Row) => r[bmA] != null).length >= 2;
 
   return (
-    <section className="tile mt-4 px-4 py-5">
+    <section className="tile mt-5 px-4 py-5">
       <div className="flex flex-wrap items-baseline gap-2">
         <button onClick={() => setPicking("primary")} className="inline-flex items-center gap-1">
           <span className="text-[20px] font-bold" style={{ color: a?.color }}>{a?.label}</span>
@@ -187,7 +187,7 @@ export default function TrendChart({
             <Line
               yAxisId="left" type="linear" dataKey={bmA} stroke={a?.color} strokeWidth={2.4}
               dot={seriesDot(a?.color ?? "")} activeDot={{ r: 6 }}
-              connectNulls={false} isAnimationActive={false}
+              connectNulls={false} isAnimationActive animationDuration={420} animationEasing="ease-out"
             />
             {bmB && (
               <Line

@@ -116,7 +116,7 @@ export default function AddEditSheet({
           <button
             onClick={attemptSave}
             disabled={busy}
-            className="w-full rounded-lg bg-strong py-3 font-bold text-on-strong disabled:opacity-50"
+            className="pressable w-full rounded-lg bg-strong py-3 font-bold text-on-strong disabled:opacity-50"
           >
             {busy ? "Saving…" : reading ? "Save changes" : "Save reading"}
           </button>
@@ -151,7 +151,7 @@ export default function AddEditSheet({
         </div>
         <button
           onClick={() => setPicking(true)}
-          className="mt-2 flex w-full items-center justify-between rounded-lg border border-line px-3 py-2.5 text-left"
+          className="pressable mt-2 flex w-full items-center justify-between rounded-lg border border-line px-3 py-2.5 text-left"
         >
           <span className="truncate">{f.sourceName || "Choose…"}</span>
           <span className="shrink-0 text-ink-soft">Change</span>

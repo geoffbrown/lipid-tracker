@@ -44,7 +44,7 @@ export default function DashboardScreen({ data }: { data: ReturnType<typeof useA
 
   return (
     <>
-      <main className="mx-auto max-w-[600px] px-3 pb-24">
+      <main className="mx-auto max-w-[600px] px-4 pb-28">
         <header className="flex items-center justify-between gap-3 py-4">
           <h1 className="text-xl font-extrabold tracking-tight">LipidLog</h1>
           <div className="flex items-center gap-2">
@@ -55,7 +55,7 @@ export default function DashboardScreen({ data }: { data: ReturnType<typeof useA
             )}
             <button
               onClick={() => setEditing(null)}
-              className="inline-flex items-center gap-1 rounded-full bg-strong px-3.5 py-2 font-bold text-on-strong"
+              className="pressable inline-flex items-center gap-1 rounded-full bg-strong px-4 py-2 font-bold text-on-strong"
             >
               <Plus size={16} aria-hidden /> Add
             </button>
@@ -63,14 +63,14 @@ export default function DashboardScreen({ data }: { data: ReturnType<typeof useA
         </header>
 
         {readings.length === 0 ? (
-          <div className="tile mt-6 px-3 py-12 text-center">
+          <div className="tile mt-6 px-4 py-12 text-center">
             <h2 className="font-semibold">No readings yet</h2>
             <p className="mt-1.5 text-ink-soft">
               Add your first reading and the trend will start building.
             </p>
             <button
               onClick={() => setEditing(null)}
-              className="mt-5 rounded-lg bg-strong px-5 py-3 font-bold text-on-strong"
+              className="pressable mt-5 rounded-lg bg-strong px-5 py-3 font-bold text-on-strong"
             >
               Add a reading
             </button>
@@ -78,7 +78,7 @@ export default function DashboardScreen({ data }: { data: ReturnType<typeof useA
         ) : (
           <>
             {/* The panel readout: ruled columns on the page, not a row of cards. */}
-            <div className="mt-4 grid grid-cols-3 gap-2">
+            <div className="mt-5 grid grid-cols-3 gap-2">
               {profile.cards.map((key, idx) => {
                 const bm = BM(key);
                 const found = latestFor(key);
@@ -98,7 +98,7 @@ export default function DashboardScreen({ data }: { data: ReturnType<typeof useA
 
             <TrendChart enriched={descending} ldlMethod={profile.ldlMethod} />
 
-            <h2 className="mt-9 mb-2.5 px-1 text-[13px] font-semibold tracking-[0.04em] text-ink-faint">
+            <h2 className="mt-8 mb-2.5 px-1 text-[13px] font-semibold tracking-[0.04em] text-ink-faint">
               Recent readings
             </h2>
             <div className="flex flex-col gap-2">

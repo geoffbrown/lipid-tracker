@@ -42,7 +42,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[600px] flex-col px-3 py-6">
+    <main className="mx-auto flex min-h-screen max-w-[600px] flex-col px-4 py-6">
       {/* Progress reads as position, not decoration: three steps, this is which. */}
       <ol className="mb-8 flex gap-2" aria-label="Progress">
         {STEPS.map((label, i) => (
@@ -122,7 +122,7 @@ export default function OnboardingPage() {
                 <button
                   key={option}
                   onClick={() => setName(option)}
-                  className="flex w-full items-center justify-between px-4 py-4 text-left"
+                  className="pressable-row flex w-full items-center justify-between px-4 py-4 text-left transition-colors"
                 >
                   <span className={name === option ? "font-semibold" : ""}>{option}</span>
                   {name === option && <Check size={17} aria-label="Selected" />}
@@ -166,7 +166,7 @@ export default function OnboardingPage() {
         {step > 0 && (
           <button
             onClick={() => setStep((s) => s - 1)}
-            className="rounded-lg border border-line px-4 py-3 font-semibold"
+            className="pressable rounded-lg border border-line px-4 py-3 font-semibold"
           >
             Back
           </button>
@@ -175,7 +175,7 @@ export default function OnboardingPage() {
           <>
             <button
               onClick={() => setStep((s) => s + 1)}
-              className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-strong py-3 font-bold text-on-strong"
+              className="pressable flex flex-1 items-center justify-center gap-1 rounded-lg bg-strong py-3 font-bold text-on-strong"
             >
               Continue <ChevronRight size={17} aria-hidden />
             </button>
@@ -187,7 +187,7 @@ export default function OnboardingPage() {
           <button
             onClick={finish}
             disabled={saving}
-            className="flex-1 rounded-lg bg-strong py-3 font-bold text-on-strong disabled:opacity-50"
+            className="pressable flex-1 rounded-lg bg-strong py-3 font-bold text-on-strong disabled:opacity-50"
           >
             {saving ? "Saving…" : "Add my first reading"}
           </button>

@@ -56,7 +56,7 @@ export default function MetricReadout({
     <button
       onClick={onPress}
       aria-label={`${bm.label}: choose which metric to show here`}
-      className="tile min-w-0 px-3.5 py-4 text-left"
+      className="tile pressable pressable-row min-w-0 px-4 py-4 text-left"
     >
       <span className="flex items-center justify-between gap-1">
         <span className="flex min-w-0 items-center gap-px">
