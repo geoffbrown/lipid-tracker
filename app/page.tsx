@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import DashboardScreen from "@/components/DashboardScreen";
 import Header from "@/components/Header";
 import { useAppData } from "@/lib/use-app-data";
+import ScreenState from "@/components/ScreenState";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -16,9 +17,7 @@ export default function DashboardPage() {
     if (data.needsOnboarding) router.replace("/onboarding");
   }, [data.needsOnboarding, router]);
 
-  if (data.loading) {
-    return <main className="grid min-h-screen place-items-center text-ink-soft">Loading…</main>;
-  }
+  if (data.loading || data.error) return <ScreenState error={data.error} />;
 
   return (
     <>

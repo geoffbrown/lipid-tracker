@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -16,7 +15,6 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
  */
 export default function LoginPage() {
   const configured = isSupabaseConfigured();
-  const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,9 +33,19 @@ export default function LoginPage() {
         password,
       });
       if (error) throw error;
-      // replace(), not push() — the login page should not sit in history behind
-      // a signed-in session.
-      router.replace("/");
+      /* A full document load, not router.replace(). The session cookie is
+         written by the browser client as this resolves, and a client-side
+         navigation asks the server for the next route over the connection it
+         already has — so the gate in proxy.ts can evaluate the request before
+         that cookie is on it, decide the visitor is signed out, and send the
+         router straight back to /login. The navigation then resolves to the
+         page we are already on: the URL never changes, nothing re-renders, and
+         the button sits on "Signing in…" for good. Reloading by hand is what
+         cleared it, which is exactly this request.
+         assign(), not replace(), keeps the browser's own back behaviour;
+         the gate bounces a signed-in visitor off /login anyway. */
+      window.location.assign("/");
+      return; // the document is being replaced — do not clear `busy`.
     } catch (err) {
       setBusy(false);
       setError(

@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Download, FileText, KeyRound, LogOut, Monitor, UserRound } from "lucide-react";
 import Header from "@/components/Header";
 import Segmented from "@/components/Segmented";
 import Sheet from "@/components/Sheet";
-import { useAppData } from "@/lib/use-app-data";
+import { clearAppCache, useAppData } from "@/lib/use-app-data";
+import ScreenState from "@/components/ScreenState";
 import { getReadingStore } from "@/lib/store";
 import { downloadCSV } from "@/lib/csv";
 import { getTheme, setTheme, type ThemeChoice } from "@/lib/theme";
@@ -112,8 +112,7 @@ function PasswordSheet({ onClose }: { onClose: () => void }) {
 }
 
 export default function SettingsPage() {
-  const { loading, readings, profile, saveProfile } = useAppData();
-  const router = useRouter();
+  const { loading, error, readings, profile, saveProfile } = useAppData();
   const [theme, setThemeState] = useState<ThemeChoice>("auto");
   const [lpa, setLpa] = useState("");
   const [confirmClear, setConfirmClear] = useState(false);
@@ -133,10 +132,14 @@ export default function SettingsPage() {
 
   async function signOut() {
     await createClient().auth.signOut();
-    router.replace("/login");
+    /* Hard navigation, and drop the cached readings first: the cache is keyed
+       to nothing but this document, so it must not survive into whoever signs
+       in next. */
+    clearAppCache();
+    window.location.assign("/login");
   }
 
-  if (loading) return <main className="grid min-h-screen place-items-center text-ink-soft">Loading…</main>;
+  if (loading || error) return <ScreenState error={error} />;
 
   const Row = ({ label, sub, right }: { label: React.ReactNode; sub?: string; right?: React.ReactNode }) => (
     <div className="flex items-center justify-between gap-4 px-4 py-4">

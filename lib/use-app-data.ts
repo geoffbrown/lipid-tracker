@@ -19,24 +19,71 @@ export interface Trend {
 const fmtShort = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
+interface Snapshot {
+  readings: Reading[];
+  profile: Profile;
+  needsOnboarding: boolean;
+}
+
+/**
+ * What the last successful load returned, kept for the life of the document.
+ *
+ * Every screen mounts its own copy of this hook, so without a cache each
+ * navigation started from `readings === null` and every screen showed its
+ * full-page loading state before rendering anything — a flash on every tab
+ * change, for data the app already had. Seeding from here makes a second visit
+ * render immediately; the fetch below still runs and reconciles.
+ *
+ * It is per-document and per-account: sign-out clears it, and both sign-in and
+ * sign-out navigate hard, which tears down the module anyway. One account's
+ * readings must never be seeded into another's screen.
+ */
+let cache: Snapshot | null = null;
+
+export function clearAppCache() {
+  cache = null;
+}
+
 /** Everything the screens need from the store, in one place, so the dashboard
  *  and the history view cannot disagree about how a value is derived. */
 export function useAppData() {
-  const [readings, setReadings] = useState<Reading[] | null>(null);
-  const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE);
-  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [readings, setReadings] = useState<Reading[] | null>(cache?.readings ?? null);
+  const [profile, setProfile] = useState<Profile>(cache?.profile ?? DEFAULT_PROFILE);
+  const [needsOnboarding, setNeedsOnboarding] = useState(cache?.needsOnboarding ?? false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let alive = true;
     (async () => {
-      const [rows, saved] = await Promise.all([
-        getReadingStore().list(),
-        getProfileStore().get(),
-      ]);
-      const merged = { ...DEFAULT_PROFILE, ...(saved ?? {}) };
-      setNeedsOnboarding(!merged.onboardedAt && rows.length === 0);
-      setProfile(merged);
-      setReadings(rows);
+      try {
+        const [rows, saved] = await Promise.all([
+          getReadingStore().list(),
+          getProfileStore().get(),
+        ]);
+        const merged = { ...DEFAULT_PROFILE, ...(saved ?? {}) };
+        cache = {
+          readings: rows,
+          profile: merged,
+          needsOnboarding: !merged.onboardedAt && rows.length === 0,
+        };
+        if (!alive) return;
+        setNeedsOnboarding(cache.needsOnboarding);
+        setProfile(merged);
+        setReadings(rows);
+        setError(null);
+      } catch (err) {
+        /* Without this the rejection was silent and `readings` stayed null, so
+           a failed load rendered "Loading…" forever with nothing to act on.
+           A stuck spinner is the worst way to report an error. */
+        if (!alive) return;
+        setError(
+          err instanceof Error ? err.message : "Couldn't load your readings.",
+        );
+      }
     })();
+    return () => {
+      alive = false;
+    };
   }, []);
 
   /* Mutations live beside the reads so every screen sees the same state without
@@ -45,8 +92,12 @@ export function useAppData() {
     async (data: Omit<Reading, "id"> & { id?: string }) => {
       const saved = await getReadingStore().save(data);
       setReadings((rows) => {
-        const next = (rows ?? []).filter((r) => r.id !== saved.id).concat(saved);
-        return next.sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp));
+        const next = (rows ?? [])
+          .filter((r) => r.id !== saved.id)
+          .concat(saved)
+          .sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp));
+        if (cache) cache = { ...cache, readings: next };
+        return next;
       });
     },
     [],
@@ -54,12 +105,20 @@ export function useAppData() {
 
   const deleteReading = useCallback(async (id: string) => {
     await getReadingStore().remove(id);
-    setReadings((rows) => (rows ?? []).filter((r) => r.id !== id));
+    setReadings((rows) => {
+      const next = (rows ?? []).filter((r) => r.id !== id);
+      if (cache) cache = { ...cache, readings: next };
+      return next;
+    });
   }, []);
 
   const saveProfile = useCallback(
     async (patch: Partial<Profile>) => {
-      setProfile((p) => ({ ...p, ...patch }));
+      setProfile((p) => {
+        const next = { ...p, ...patch };
+        if (cache) cache = { ...cache, profile: next };
+        return next;
+      });
       await getProfileStore().save(patch);
     },
     [],
@@ -134,7 +193,8 @@ export function useAppData() {
   );
 
   return {
-    loading: readings === null,
+    loading: readings === null && error === null,
+    error,
     needsOnboarding,
     readings: readings ?? [],
     profile, saveProfile, saveReading, deleteReading,

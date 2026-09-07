@@ -8,6 +8,7 @@ import Segmented from "@/components/Segmented";
 import ReadingDetail from "@/components/ReadingDetail";
 import AddEditSheet from "@/components/AddEditSheet";
 import { useAppData, type Enriched } from "@/lib/use-app-data";
+import ScreenState from "@/components/ScreenState";
 import type { Reading } from "@/lib/types";
 
 type SrcMode = "all" | "home" | "lab";
@@ -17,7 +18,7 @@ const fmtMonth = (iso: string) =>
 
 export default function HistoryPage() {
   const router = useRouter();
-  const { loading, needsOnboarding, descending, rowMetrics, profile, saveReading, deleteReading } =
+  const { loading, error, needsOnboarding, descending, rowMetrics, profile, saveReading, deleteReading } =
     useAppData();
   const [srcMode, setSrcMode] = useState<SrcMode>("all");
   const [detail, setDetail] = useState<Enriched | null>(null);
@@ -46,7 +47,7 @@ export default function HistoryPage() {
     return [...map.entries()];
   }, [scoped]);
 
-  if (loading) return <main className="grid min-h-screen place-items-center text-ink-soft">Loading…</main>;
+  if (loading || error) return <ScreenState error={error} />;
 
   return (
     <>

@@ -42,16 +42,21 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isAuthRoute = path.startsWith("/login") || path.startsWith("/auth");
 
-  if (!user && !isAuthRoute) {
+  /* getUser() may rotate an expiring token, and setAll() writes the new pair
+     onto `response`. Returning a bare redirect would throw that away: the
+     refresh token has already been spent server-side, so the browser would
+     keep sending the old one and get signed out at an arbitrary moment an hour
+     in. Every response out of here carries those cookies. */
+  const redirectTo = (pathname: string) => {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
-  if (user && path.startsWith("/login")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    return NextResponse.redirect(url);
-  }
+    url.pathname = pathname;
+    const redirect = NextResponse.redirect(url);
+    response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    return redirect;
+  };
+
+  if (!user && !isAuthRoute) return redirectTo("/login");
+  if (user && path.startsWith("/login")) return redirectTo("/");
 
   return response;
 }
