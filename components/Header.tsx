@@ -7,6 +7,7 @@ import { BarChart2, List, Moon, Settings, Sun, SunMoon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getTheme, setTheme, type ThemeChoice } from "@/lib/theme";
+import { getProfileStore } from "@/lib/store";
 
 /**
  * Both halves of the app's navigation, because they are the same navigation.
@@ -50,16 +51,23 @@ function ThemeToggle() {
   useEffect(() => setChoice(getTheme()), []);
 
   const Icon = THEME_ICON[choice];
+  /* Auto carries a ring. Its icon is a sun and moon together, which at 17px is
+     easy to read as the plain sun of light mode — and unlike the other two,
+     auto has no ambient cue to fall back on, because the page may well be
+     showing the light palette either way. */
   return (
     <button
       onClick={() => {
         const next = THEME_ORDER[(THEME_ORDER.indexOf(choice) + 1) % THEME_ORDER.length];
         setChoice(next);
-        setTheme(next);
+        setTheme(next);               // paints now, and updates the local mirror
+        void getProfileStore().save({ theme: next });   // follows the account
       }}
       aria-label={`Theme: ${choice}. Change.`}
       title={`Theme: ${choice}`}
-      className="pressable grid h-8 w-8 shrink-0 place-items-center rounded-full transition-colors hover:bg-paper-2"
+      className={`pressable grid h-8 w-8 shrink-0 place-items-center rounded-full transition-colors hover:bg-paper-2 ${
+        choice === "auto" ? "ring-1 ring-line-strong" : ""
+      }`}
     >
       <Icon size={17} aria-hidden />
     </button>

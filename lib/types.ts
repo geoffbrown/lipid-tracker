@@ -18,6 +18,7 @@ export interface Reading {
 export type LdlMethod = "none" | "friedewald" | "martin-hopkins";
 export type ApobMethod = "interheart" | "aggressive";
 export type LpaUnit = "mg/dL" | "nmol/L";
+export type ThemeChoice = "auto" | "light" | "dark";
 
 /** Account-level settings — these follow the user, not the device. */
 export interface Profile {
@@ -31,6 +32,9 @@ export interface Profile {
   homeDevices: string[];
   labSources: string[];
   cards: string[];
+  /* Mirrored into localStorage as well — see lib/theme.ts. The mirror is what
+     the pre-paint script reads; this is what makes the choice follow you. */
+  theme: ThemeChoice;
   onboardedAt: string | null;
 }
 
@@ -48,5 +52,6 @@ export const DEFAULT_PROFILE: Profile = {
   homeDevices: SEED_HOME,
   labSources: SEED_LAB,
   cards: ["ldl", "hdl", "apob"],
+  theme: "auto",
   onboardedAt: null,
 };

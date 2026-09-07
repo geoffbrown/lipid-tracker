@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Upload, FileText, KeyRound, LogOut, Monitor, UserRound } from "lucide-react";
+import { Download, Upload, FileText, KeyRound, LogOut, Monitor, Plus, UserRound, X } from "lucide-react";
 import Header from "@/components/Header";
 import Segmented from "@/components/Segmented";
 import Sheet from "@/components/Sheet";
@@ -11,7 +11,7 @@ import { SettingsSkeleton } from "@/components/Skeleton";
 import ImportSheet from "@/components/ImportSheet";
 import { getReadingStore } from "@/lib/store";
 import { downloadCSV } from "@/lib/csv";
-import { getTheme, setTheme, type ThemeChoice } from "@/lib/theme";
+import { setTheme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { MH_TABLE_IS_APPROXIMATE } from "@/lib/calc.js";
@@ -113,17 +113,72 @@ function PasswordSheet({ onClose }: { onClose: () => void }) {
   );
 }
 
+/**
+ * Add a home device or a lab source.
+ *
+ * Names are free text because the list is a personal one — the seeds are a
+ * starting point, not an enumeration of what exists. Duplicates are refused
+ * case-insensitively, since two entries differing only in case would be
+ * indistinguishable in the picker.
+ */
+function AddSourceSheet({
+  title, placeholder, existing, onAdd, onClose,
+}: {
+  title: string;
+  placeholder: string;
+  existing: string[];
+  onAdd: (name: string) => void;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState("");
+  const trimmed = name.trim();
+  const duplicate = existing.some((n) => n.toLowerCase() === trimmed.toLowerCase());
+
+  function submit() {
+    if (!trimmed || duplicate) return;
+    onAdd(trimmed);
+    onClose();
+  }
+
+  return (
+    <Sheet title={title} onClose={onClose}>
+      <input
+        autoFocus
+        maxLength={40}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && submit()}
+        placeholder={placeholder}
+        aria-invalid={duplicate}
+        className="mt-2 w-full rounded-lg border border-line bg-canvas px-3 py-2.5 text-base outline-none transition-colors focus:border-ink"
+      />
+      {duplicate && (
+        <p role="alert" className="mt-2 text-danger">
+          That one is already in the list.
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={submit}
+        disabled={!trimmed || duplicate}
+        className="pressable mt-4 w-full rounded-lg bg-strong py-3 font-bold text-on-strong disabled:opacity-50"
+      >
+        Add
+      </button>
+    </Sheet>
+  );
+}
+
 export default function SettingsPage() {
   const { loading, error, readings, profile, saveProfile, importReadings } = useAppData();
-  const [theme, setThemeState] = useState<ThemeChoice>("auto");
   const [lpa, setLpa] = useState("");
   const [confirmClear, setConfirmClear] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
   const [passwordSheet, setPasswordSheet] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [adding, setAdding] = useState<null | "home" | "lab">(null);
   const configured = isSupabaseConfigured();
 
-  useEffect(() => setThemeState(getTheme()), []);
   useEffect(() => setLpa(profile.lpa == null ? "" : String(profile.lpa)), [profile.lpa]);
 
   useEffect(() => {
@@ -132,6 +187,26 @@ export default function SettingsPage() {
       .auth.getUser()
       .then(({ data }) => setEmail(data.user?.email ?? null));
   }, [configured]);
+
+  function addSource(kind: "home" | "lab", name: string) {
+    const next = [...(kind === "home" ? profile.homeDevices : profile.labSources), name];
+    void saveProfile(kind === "home" ? { homeDevices: next } : { labSources: next });
+  }
+
+  /* Removing a source never touches history: a reading stores the name it was
+     recorded with as plain text, so past readings keep saying where they came
+     from. The list is only what the picker offers next time. The last entry
+     cannot go, because an empty list leaves that picker with nothing. */
+  function removeSource(kind: "home" | "lab", name: string) {
+    const list = kind === "home" ? profile.homeDevices : profile.labSources;
+    if (list.length <= 1) return;
+    const next = list.filter((n) => n !== name);
+    void saveProfile(
+      kind === "home"
+        ? { homeDevices: next, ...(profile.defaultDevice === name ? { defaultDevice: next[0] } : {}) }
+        : { labSources: next, ...(profile.defaultLabSource === name ? { defaultLabSource: next[0] } : {}) },
+    );
+  }
 
   async function signOut() {
     await createClient().auth.signOut();
@@ -186,8 +261,8 @@ export default function SettingsPage() {
                   { value: "light" as const, label: "Light" },
                   { value: "dark" as const, label: "Dark" },
                 ]}
-                value={theme}
-                onChange={(v) => { setThemeState(v); setTheme(v); }}
+                value={profile.theme}
+                onChange={(v) => { setTheme(v); void saveProfile({ theme: v }); }}
                 ariaLabel="Theme"
               />
             }
@@ -270,6 +345,50 @@ export default function SettingsPage() {
             </div>
           </div>
         </Section>
+
+        {([
+          {
+            kind: "home" as const,
+            title: "Home devices",
+            items: profile.homeDevices,
+            current: profile.defaultDevice,
+            add: "Add a device",
+          },
+          {
+            kind: "lab" as const,
+            title: "Lab sources",
+            items: profile.labSources,
+            current: profile.defaultLabSource,
+            add: "Add a lab source",
+          },
+        ]).map((list) => (
+          <Section key={list.kind} title={list.title}>
+            {list.items.map((name) => (
+              <div key={name} className="flex items-center justify-between gap-3 px-4 py-3.5">
+                <span className="min-w-0 truncate">
+                  {name}
+                  {name === list.current && (
+                    <span className="ml-2 text-ink-faint">Default</span>
+                  )}
+                </span>
+                <button
+                  onClick={() => removeSource(list.kind, name)}
+                  disabled={list.items.length <= 1}
+                  aria-label={`Remove ${name}`}
+                  className="pressable grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink-soft transition-colors hover:bg-paper-2 hover:text-danger disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-ink-soft"
+                >
+                  <X size={16} aria-hidden />
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={() => setAdding(list.kind)}
+              className="pressable-row flex w-full items-center gap-2 px-4 py-3.5 text-left transition-colors"
+            >
+              <Plus size={16} aria-hidden /> {list.add}
+            </button>
+          </Section>
+        ))}
 
         <Section title="Your data">
           <button
@@ -372,6 +491,16 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {adding && (
+        <AddSourceSheet
+          title={adding === "home" ? "Add a device" : "Add a lab source"}
+          placeholder={adding === "home" ? "e.g. CURO L7/L5" : "e.g. LabCorp"}
+          existing={adding === "home" ? profile.homeDevices : profile.labSources}
+          onAdd={(name) => addSource(adding, name)}
+          onClose={() => setAdding(null)}
+        />
       )}
 
       {passwordSheet && <PasswordSheet onClose={() => setPasswordSheet(false)} />}

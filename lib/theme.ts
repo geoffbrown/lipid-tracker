@@ -1,8 +1,8 @@
 import { THEME_KEY, getThemeScript } from "./theme-script.js";
+import type { ThemeChoice } from "./types";
 
 export { getThemeScript };
-
-export type ThemeChoice = "auto" | "light" | "dark";
+export type { ThemeChoice };
 
 export function getTheme(): ThemeChoice {
   if (typeof window === "undefined") return "auto";
