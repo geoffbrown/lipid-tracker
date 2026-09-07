@@ -65,8 +65,13 @@ export default function OnboardingPage() {
 
   async function finish() {
     setSaving(true);
+    /* The seed lists are persisted here, not just the chosen name: the columns
+       default to '{}' in Postgres, and without this the source picker in the
+       add sheet opens onto an empty list. */
     await getProfileStore().save({
       defaultSource: source,
+      homeDevices: SEED_HOME,
+      labSources: SEED_LAB,
       ...(source === "POC" ? { defaultDevice: name } : { defaultLabSource: name }),
       onboardedAt: new Date().toISOString(),
     });

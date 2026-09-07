@@ -245,7 +245,7 @@ export default function AddEditSheet({
           current={f.sourceName}
           onSelect={(v) => { set("sourceName", v); setPicking(false); }}
           onClose={() => setPicking(false)}
-          footer="Home devices and lab sources are kept as separate lists, so a device can never be recorded as a lab result. Manage them in Settings."
+          footer="Home devices and lab sources are kept as separate lists, so a device can never be recorded as a lab result."
         />
       )}
 

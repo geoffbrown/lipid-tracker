@@ -137,8 +137,14 @@ export class SupabaseProfileStore implements ProfileStore {
       defaultSource: row.default_source,
       defaultDevice: row.default_device,
       defaultLabSource: row.default_lab_source,
-      homeDevices: row.home_devices ?? [],
-      labSources: row.lab_sources ?? [],
+      /* Omitted rather than defaulted to [] when the column is empty. The
+         merge in useAppData is a spread, so an empty array would win over the
+         seed lists and leave the source picker with nothing to offer — which
+         is what it did for every account onboarded before the save below
+         started persisting them. There is no UI that can empty these, so
+         "empty" can only mean "never written". */
+      ...(row.home_devices?.length ? { homeDevices: row.home_devices } : {}),
+      ...(row.lab_sources?.length ? { labSources: row.lab_sources } : {}),
       cards: row.cards ?? [],
       onboardedAt: row.onboarded_at,
     };
