@@ -192,7 +192,7 @@ export function useAppData() {
     (key: string, r: Enriched) => {
       if (key === "ldl") return getDispLDL(r, r.d, profile.ldlMethod)?.label ?? "Reported";
       if (key === "apob") return r.d.apobLabel ?? "Estimated";
-      if (key === "tcHdl" || key === "tgHdl") return "Derived";
+      if (key === "nonHDL" || key === "tcHdl" || key === "tgHdl") return "Derived";
       return "Measured";
     },
     [profile.ldlMethod],

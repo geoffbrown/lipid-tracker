@@ -18,6 +18,7 @@ import type { Reading } from "@/lib/types";
 const REF: Record<string, string> = {
   ldl: "Optimal < 100 · High ≥ 160", hdl: "Low < 40 · Protective ≥ 60",
   tc: "Desirable < 200 · High ≥ 240", tg: "Normal < 150 · High ≥ 200",
+  nonHDL: "Optimal < 130 · High ≥ 190",
   apob: "Optimal < 90 · High ≥ 130", tcHdl: "Goal < 3.5 · lower is better",
   tgHdl: "Goal < 2.0 (insulin-sensitivity proxy)",
 };
