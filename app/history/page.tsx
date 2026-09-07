@@ -9,6 +9,7 @@ import ReadingDetail from "@/components/ReadingDetail";
 import AddEditSheet from "@/components/AddEditSheet";
 import { useAppData, type Enriched } from "@/lib/use-app-data";
 import ScreenState from "@/components/ScreenState";
+import { HistorySkeleton } from "@/components/Skeleton";
 import type { Reading } from "@/lib/types";
 
 type SrcMode = "all" | "home" | "lab";
@@ -47,7 +48,14 @@ export default function HistoryPage() {
     return [...map.entries()];
   }, [scoped]);
 
-  if (loading || error) return <ScreenState error={error} />;
+  if (error) return <ScreenState error={error} />;
+  if (loading)
+    return (
+      <>
+        <Header />
+        <HistorySkeleton />
+      </>
+    );
 
   return (
     <>

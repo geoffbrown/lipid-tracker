@@ -7,6 +7,7 @@ import Segmented from "@/components/Segmented";
 import Sheet from "@/components/Sheet";
 import { clearAppCache, useAppData } from "@/lib/use-app-data";
 import ScreenState from "@/components/ScreenState";
+import { SettingsSkeleton } from "@/components/Skeleton";
 import { getReadingStore } from "@/lib/store";
 import { downloadCSV } from "@/lib/csv";
 import { getTheme, setTheme, type ThemeChoice } from "@/lib/theme";
@@ -139,7 +140,14 @@ export default function SettingsPage() {
     window.location.assign("/login");
   }
 
-  if (loading || error) return <ScreenState error={error} />;
+  if (error) return <ScreenState error={error} />;
+  if (loading)
+    return (
+      <>
+        <Header />
+        <SettingsSkeleton />
+      </>
+    );
 
   const Row = ({ label, sub, right }: { label: React.ReactNode; sub?: string; right?: React.ReactNode }) => (
     <div className="flex items-center justify-between gap-4 px-4 py-4">

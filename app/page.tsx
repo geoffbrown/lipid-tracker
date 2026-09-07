@@ -6,6 +6,7 @@ import DashboardScreen from "@/components/DashboardScreen";
 import Header from "@/components/Header";
 import { useAppData } from "@/lib/use-app-data";
 import ScreenState from "@/components/ScreenState";
+import { DashboardSkeleton } from "@/components/Skeleton";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -17,7 +18,14 @@ export default function DashboardPage() {
     if (data.needsOnboarding) router.replace("/onboarding");
   }, [data.needsOnboarding, router]);
 
-  if (data.loading || data.error) return <ScreenState error={data.error} />;
+  if (data.error) return <ScreenState error={data.error} />;
+  if (data.loading)
+    return (
+      <>
+        <Header />
+        <DashboardSkeleton />
+      </>
+    );
 
   return (
     <>
