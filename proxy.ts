@@ -58,9 +58,12 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Run on every route EXCEPT Next internals and static asset/icon files —
-    // gating those would block icons and fonts for signed-out users on the
-    // login page itself.
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2)$).*)",
+    // Run on every route EXCEPT Next internals, the icon and manifest routes,
+    // and static asset files. `apple-icon` and `manifest.webmanifest` have to
+    // be named explicitly: the extension alternation below does not cover an
+    // extensionless route, and gating them sends the browser a redirect to
+    // /login where it expected an image — which is what makes an installed
+    // app or a dock shortcut fall back to a generic letter tile.
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icon|apple-icon|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2)$).*)",
   ],
 };
