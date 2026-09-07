@@ -4,9 +4,15 @@
 > all exist. Three manual steps remain — see *What is left* below. Parts 1-3
 > further down describe the full path for reference or for a rebuild.
 
-Two services: **Supabase** holds the data and sends sign-in links, **Vercel**
-serves the app. Roughly 30 minutes end to end, most of it waiting for a project
-to provision.
+Two services: **Supabase** holds the data and the account, **Vercel** serves the
+app. A third, **Resend**, is optional — see *Email* below. Roughly 30 minutes end
+to end, most of it waiting for a project to provision.
+
+Sign-in is **email + password**. There is no sign-up screen and no
+forgot-password link: this is a single-user tracker, so the account is created
+once in the Supabase dashboard and the password is changed from **Settings →
+Change password** while signed in. The upshot is that the app sends **no email at
+all** in normal use.
 
 Do it in this order. Supabase first, because Vercel needs its keys, and then one
 step back in Supabase at the end because it needs the Vercel URL.
@@ -35,6 +41,7 @@ whole path, but you do not need to repeat them.
 | Schema applied | `readings` + `profiles`, RLS enabled on both, policy per operation |
 | Vercel project | **lipidlog**, linked to `geoffbrown/lipid-tracker`, production branch `main` |
 | Live URL | <https://lipidlog.vercel.app> |
+| Account | `geoffreywbrown@gmail.com`, created directly in `auth.users`, email pre-confirmed |
 
 A separate Supabase project was created deliberately. The pre-existing one
 (`uaaneubpzsxtkjluywsy`) belongs to the grip strength tracker and already has
@@ -45,19 +52,18 @@ a grip-strength table.
 
 ---
 
-## What is left — three steps, about five minutes
+## What is left — three steps, about ten minutes
 
-The deployed app is currently running in **local-store mode**: it says "This
-device only" in the header and `/login` says there is no backend configured.
-That is the app correctly reporting that it has no keys yet. Fixing that is
-step 1.
+The deployed app is currently running in **local-store mode**: `/login` says
+there is no backend configured. That is the app correctly reporting that it has
+no keys yet. Fixing that is step 1.
 
 ### 1. Add the environment variables in Vercel
 
 **Vercel → lipidlog → Settings → Environment Variables.** Add both, ticked for
 Production, Preview and Development:
 
-| Name | Where to get it |
+| Name | Value |
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://akevwzlymqpyrgtlqald.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API → anon / publishable key |
@@ -70,30 +76,68 @@ committing it would also mean rotating it later touches git history.
 Then **Deployments → ⋯ → Redeploy**. This is required: `NEXT_PUBLIC_*` values
 are inlined at build time, so the existing build cannot pick them up.
 
-**How to tell it worked:** the "This device only" pill disappears from the
-header.
+**How to tell it worked:** `/login` shows an email *and password* form instead of
+the "No account needed yet" card.
 
-### 2. Allow the sign-in URLs in Supabase
+### 2. Check email sign-in is enabled
 
-**Supabase → lipidlog → Authentication → URL Configuration:**
+**Authentication → Sign In / Providers → Email** must be **enabled** — it is the
+provider that backs password sign-in, not just magic links. Set **Enable email
+signups** *off*: the only account this app needs already exists, and leaving
+signups on lets anyone who finds the URL create one.
+
+Supabase's security advisor will flag **leaked password protection** as disabled
+on this project. That is a **Pro-plan feature** and cannot be enabled on Hobby,
+so treat the warning as permanent and expected rather than an outstanding task.
+What stands in for it: the password is set once, by hand, and is not reused
+anywhere else — so pick a long random one when you change it from Settings.
+
+### 3. Allow the sign-in URLs
+
+**Authentication → URL Configuration:**
 
 - **Site URL**: `https://lipidlog.vercel.app`
 - **Redirect URLs**, add both:
   - `https://lipidlog.vercel.app/**`
   - `http://localhost:3000/**` (so local dev still signs in)
 
-This is the step people skip. Without it the emailed link refuses to complete
-and bounces you to `/login?error=auth`.
+Password sign-in does not strictly need this, but `/auth/callback` does, and it
+costs nothing to set now rather than debug later.
 
-### 3. Check email sign-in is on
+Then open <https://lipidlog.vercel.app> on your phone, sign in, add a reading,
+and confirm it appears on a second device — which is the actual proof it is in
+Postgres rather than the browser.
 
-**Authentication → Sign In / Providers → Email** should be enabled with
-"Confirm email" on. It is on by default for new projects, so this is a
-verification rather than a change.
+---
 
-Then open <https://lipidlog.vercel.app> on your phone, sign in with the emailed
-link, add a reading, and confirm it appears on a second device — which is the
-actual proof it is in Postgres rather than the browser.
+## Email — the optional fourth service
+
+Because the app has no sign-up, no confirmation and no password reset, **it never
+sends an email**. Supabase's built-in email service is therefore never exercised,
+and you can stop here.
+
+Set up SMTP only if you later add a password-reset flow. When you do:
+
+1. **Resend → API Keys → Create API Key** with sending permission. If you have
+   already verified a sending domain on this Resend account, it is reused — the
+   verification is account-level, not per-project.
+2. **Supabase → lipidlog → Project Settings → Authentication → SMTP Settings**,
+   enable custom SMTP:
+
+   | Field | Value |
+   |---|---|
+   | Host | `smtp.resend.com` |
+   | Port | `465` |
+   | Username | `resend` |
+   | Password | the Resend API key |
+   | Sender email | an address on your verified domain |
+   | Sender name | `LipidLog` |
+
+SMTP settings are **per Supabase project**. Configuring Resend on another project
+does nothing here.
+
+Lost the password with no reset flow? **Authentication → Users → ⋯ → Reset
+password** in the Supabase dashboard sets a new one directly.
 
 ---
 
@@ -142,16 +186,17 @@ To check it took: **Table Editor** should list both tables, each showing
 Both are publishable and are meant to reach the browser. **Do not** copy the
 `service_role` key; it bypasses RLS and must never be in the app.
 
-### 1.4 Turn on email sign-in
+### 1.4 Turn on email sign-in, and create the account
 
 **Authentication → Sign In / Providers**:
 
-- **Email** enabled.
-- **Confirm email** on.
-- Leave "Enable email signups" on, or you cannot create your own account.
+- **Email** enabled — it backs password sign-in, not just magic links.
+- **Enable email signups** *off*. The app has no sign-up screen, so leaving this
+  on only lets strangers who find the URL create accounts.
 
-The app handles both link styles Supabase can send (PKCE `?code=` and email-OTP
-`?token_hash=`), so you do not need to match a particular email template.
+Then **Authentication → Users → Add user → Create new user**: your email, a
+password, and **Auto Confirm User** ticked. An unconfirmed account cannot sign
+in.
 
 ### 1.5 Allow your sign-in URLs
 
@@ -188,12 +233,13 @@ Open <http://localhost:3000>. **How to tell it worked:** the "This device only"
 pill in the header disappears. That pill is the app telling you it is running
 without a backend, so its absence is the signal.
 
-Go to `/login`, enter your email, open the link from your inbox. You should land
-back on the dashboard signed in. Add a reading, then check **Table Editor →
-readings** in Supabase — the row should be there with your `user_id` filled in.
+Go to `/login` and sign in with the email and password from 1.4. You should land
+on the dashboard. Add a reading, then check **Table Editor → readings** in
+Supabase — the row should be there with your `user_id` filled in.
 
-If the link bounces you to `/login?error=auth`, the redirect URL in 1.5 does not
-match where you are running.
+Every other route redirects to `/login` until you do; that gate lives in
+`proxy.ts` and is a no-op when the two env vars are absent, which is what lets
+the app still run in local-store mode.
 
 ---
 
@@ -235,14 +281,15 @@ Back in **Authentication → URL Configuration**:
   - `http://localhost:3000/**` (keep, so local dev still works)
   - `https://*-your-team.vercel.app/**` if you want preview deploys to sign in
 
-This step is the one people skip. Without it the emailed link refuses to
-complete on the deployed site.
+Password sign-in does not need this, but `/auth/callback` does, and setting it
+now is cheaper than debugging it later.
 
 ### 3.5 Check it
 
-Open the Vercel URL on your phone. No "This device only" pill, sign in with a
-link, add a reading, and confirm it appears after a reload — and on a second
-device, which is the actual proof that it is in Postgres and not the browser.
+Open the Vercel URL on your phone. No "This device only" pill, sign in with your
+email and password, add a reading, and confirm it appears after a reload — and on
+a second device, which is the actual proof that it is in Postgres and not the
+browser.
 
 ---
 
@@ -252,9 +299,17 @@ device, which is the actual proof that it is in Postgres and not the browser.
 The env vars are missing or were added after the build. Redeploy after adding
 them — `NEXT_PUBLIC_*` values are inlined at build time, not read at runtime.
 
-**Sign-in link goes to `/login?error=auth`**
-The URL you are on is not in the redirect allow-list (3.4), or the link has
-already been used — they are single-use.
+**"Invalid login credentials" with the right password**
+The account was created without **Auto Confirm User**, so it has no confirmed
+email. Fix it in **Authentication → Users** — confirm the user, or delete and
+recreate with the tick.
+
+**Signed in on one device, redirected to `/login` on another**
+Expected — sessions are per browser. Sign in again; the data is the same.
+
+**No email ever arrives**
+Nothing sends one. The app has no confirmation, sign-up or reset email by
+design. See *Email* above if you want to add SMTP.
 
 **Signed in, but no readings and saving does nothing**
 The migration did not run, or ran only partly. Check both tables exist and both
@@ -265,6 +320,10 @@ twice.
 `user_id` on those rows does not match the signed-in user. Rows created before
 you signed in, or inserted by hand in the dashboard, will not have your id.
 
+**Locked out**
+**Authentication → Users → ⋯ → Reset password** sets a new one from the
+dashboard. There is no in-app reset flow.
+
 ---
 
 ## Known gaps at launch
@@ -273,6 +332,8 @@ you signed in, or inserted by hand in the dashboard, will not have your id.
   before switching if you have entered anything you want to keep.
 - **No account deletion flow.** The schema cascades on user delete, but there is
   no button for it.
+- **No password reset in the app.** Deliberate for a single-user tracker — the
+  dashboard resets it. Adding one means adding SMTP (see *Email*).
 - **The Martin-Hopkins divisor is an approximation.** It selects on
   triglycerides alone; the published method also uses non-HDL. Settings says so
   where the method is chosen. See `PRD-v4-web.md` OPEN-2.

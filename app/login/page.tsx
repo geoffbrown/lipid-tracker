@@ -1,32 +1,53 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
+/**
+ * Email + password sign-in.
+ *
+ * There is deliberately no sign-up and no password-reset flow: this is a
+ * single-user personal tracker, so the account is created once in the Supabase
+ * dashboard and the password is changed from Settings while signed in. That
+ * keeps the app from needing to send any email at all in normal use — see
+ * SETUP.md.
+ */
 export default function LoginPage() {
   const configured = isSupabaseConfigured();
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
-
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!valid || busy) return;
+    if (busy) return;
     setBusy(true);
     setError("");
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-    });
-    setBusy(false);
-    if (error) setError(error.message);
-    else setSent(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (error) throw error;
+      // replace(), not push() — the login page should not sit in history behind
+      // a signed-in session.
+      router.replace("/");
+    } catch (err) {
+      setBusy(false);
+      setError(
+        err instanceof Error ? err.message : "Couldn't sign in. Check your details.",
+      );
+    }
   }
+
+  const inputCls =
+    "w-full rounded-lg border border-line bg-canvas px-3 py-2.5 text-base outline-none transition-colors focus:border-ink";
 
   return (
     <main className="flex min-h-screen items-center justify-center p-6">
@@ -53,43 +74,53 @@ export default function LoginPage() {
               Continue
             </a>
           </div>
-        ) : sent ? (
-          <div className="card p-5">
-            <h2 className="font-bold">Check your inbox</h2>
-            <p className="mt-2 leading-relaxed text-ink-soft">
-              We sent a sign-in link to <span className="font-semibold text-ink">{email.trim()}</span>.
-              Open it on this device to finish signing in.
-            </p>
-            <button
-              onClick={() => setSent(false)}
-              className="pressable mt-4 w-full rounded-lg border border-line py-2.5 font-semibold"
-            >
-              Use a different email
-            </button>
-          </div>
         ) : (
           <form onSubmit={submit} className="card p-5">
             <h2 className="font-bold">Sign in</h2>
-            <p className="mt-1 mb-4 leading-relaxed text-ink-soft">
-              We&rsquo;ll email you a one-time link. No password to remember.
-            </p>
+
+            <label htmlFor="email" className="mt-4 mb-1.5 block text-ink-soft">
+              Email
+            </label>
             <input
+              id="email"
               type="email"
               autoFocus
               required
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              aria-label="Email address"
-              className="w-full rounded-lg border border-line bg-canvas px-3 py-2.5 text-base outline-none"
+              className={inputCls}
             />
-            {error && <p className="mt-2 text-danger">{error}</p>}
+
+            <label htmlFor="password" className="mt-3 mb-1.5 block text-ink-soft">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              aria-invalid={error !== ""}
+              aria-describedby={error ? "signin-error" : undefined}
+              className={inputCls}
+            />
+
+            {error && (
+              <p id="signin-error" role="alert" className="mt-2 text-danger">
+                {error}
+              </p>
+            )}
+
             <button
               type="submit"
-              disabled={!valid || busy}
+              disabled={busy || !email.trim() || !password}
               className="pressable mt-4 w-full rounded-lg bg-strong py-3 font-bold text-on-strong disabled:opacity-50"
             >
-              {busy ? "Sending…" : "Email me a sign-in link"}
+              {busy ? "Signing in…" : "Sign in"}
             </button>
           </form>
         )}
