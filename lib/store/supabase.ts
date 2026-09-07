@@ -67,6 +67,27 @@ export class SupabaseReadingStore implements ReadingStore {
     return toReading(data as ReadingRow);
   }
 
+  async saveMany(readings: Omit<Reading, "id">[]): Promise<Reading[]> {
+    if (readings.length === 0) return [];
+    // One insert. user_id comes from its column default and RLS checks it, so
+    // a row that is not the caller's cannot be written here either.
+    const { data, error } = await this.supabase
+      .from("readings")
+      .insert(
+        readings.map((r) => ({
+          ts: r.timestamp,
+          source: r.source,
+          source_name: r.sourceName,
+          tc: r.tc, hdl: r.hdl, ldl: r.ldl, tg: r.tg,
+          apob_measured: r.source === "Lab" ? r.apobMeasured : null,
+          notes: r.notes || null,
+        })),
+      )
+      .select("id, ts, source, source_name, tc, hdl, ldl, tg, apob_measured, notes");
+    if (error) throw error;
+    return (data as ReadingRow[]).map(toReading);
+  }
+
   async remove(id: string): Promise<void> {
     const { error } = await this.supabase.from("readings").delete().eq("id", id);
     if (error) throw error;

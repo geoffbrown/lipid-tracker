@@ -46,6 +46,12 @@ export class LocalReadingStore implements ReadingStore {
     write(READINGS_KEY, rows);
     return saved;
   }
+  async saveMany(readings: Omit<Reading, "id">[]): Promise<Reading[]> {
+    const rows = read<Reading[]>(READINGS_KEY, []);
+    const saved = readings.map((r) => ({ ...r, id: newId() }) as Reading);
+    write(READINGS_KEY, rows.concat(saved));
+    return saved;
+  }
   async remove(id: string): Promise<void> {
     write(READINGS_KEY, read<Reading[]>(READINGS_KEY, []).filter((r) => r.id !== id));
   }

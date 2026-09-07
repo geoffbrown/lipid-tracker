@@ -6,6 +6,9 @@ import type { Profile, Reading } from "../types";
 export interface ReadingStore {
   list(): Promise<Reading[]>;
   save(reading: Omit<Reading, "id"> & { id?: string }): Promise<Reading>;
+  /** Insert many at once. An import of a year of readings is one round trip,
+   *  not one per row, and it either lands or it does not. */
+  saveMany(readings: Omit<Reading, "id">[]): Promise<Reading[]>;
   remove(id: string): Promise<void>;
   clear(): Promise<void>;
 }

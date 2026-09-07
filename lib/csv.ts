@@ -12,9 +12,14 @@ function cell(v: unknown): string {
   return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
+/* Two ApoB columns, because they are two different facts. "ApoB (Measured)" is
+   what a lab reported and is the only one that round-trips back in on import;
+   "ApoB" is this app's estimate from the panel, and re-importing it would
+   record a calculation as a measurement. The export used to carry only the
+   estimate, which silently dropped the measured value from the file. */
 const HEADER = [
   "Timestamp", "Source", "Device", "TC", "HDL", "LDL (Device)", "LDL (MH)", "LDL (Fried)",
-  "TG", "Non-HDL", "ApoB", "ApoB Label", "TC/HDL", "TG/HDL", "Notes",
+  "TG", "Non-HDL", "ApoB (Measured)", "ApoB", "ApoB Label", "TC/HDL", "TG/HDL", "Notes",
 ];
 
 export function toCSV(readings: Reading[], apobMethod: ApobMethod): string {
@@ -26,8 +31,8 @@ export function toCSV(readings: Reading[], apobMethod: ApobMethod): string {
          precision, and a rendered date discards the time of day. */
       return [
         r.timestamp, r.source === "Lab" ? "Lab" : "Home", r.sourceName,
-        r.tc, r.hdl, r.ldl, d.ldlMH, d.ldlFried, r.tg, d.nonHDL, d.apob, d.apobLabel,
-        d.tcHdl, d.tgHdl, r.notes,
+        r.tc, r.hdl, r.ldl, d.ldlMH, d.ldlFried, r.tg, d.nonHDL,
+        r.apobMeasured, d.apob, d.apobLabel, d.tcHdl, d.tgHdl, r.notes,
       ].map(cell).join(",");
     });
   return [HEADER.join(","), ...rows].join("\r\n");

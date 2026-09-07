@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, FileText, KeyRound, LogOut, Monitor, UserRound } from "lucide-react";
+import { Download, Upload, FileText, KeyRound, LogOut, Monitor, UserRound } from "lucide-react";
 import Header from "@/components/Header";
 import Segmented from "@/components/Segmented";
 import Sheet from "@/components/Sheet";
 import { clearAppCache, useAppData } from "@/lib/use-app-data";
 import ScreenState from "@/components/ScreenState";
 import { SettingsSkeleton } from "@/components/Skeleton";
+import ImportSheet from "@/components/ImportSheet";
 import { getReadingStore } from "@/lib/store";
 import { downloadCSV } from "@/lib/csv";
 import { getTheme, setTheme, type ThemeChoice } from "@/lib/theme";
@@ -113,12 +114,13 @@ function PasswordSheet({ onClose }: { onClose: () => void }) {
 }
 
 export default function SettingsPage() {
-  const { loading, error, readings, profile, saveProfile } = useAppData();
+  const { loading, error, readings, profile, saveProfile, importReadings } = useAppData();
   const [theme, setThemeState] = useState<ThemeChoice>("auto");
   const [lpa, setLpa] = useState("");
   const [confirmClear, setConfirmClear] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
   const [passwordSheet, setPasswordSheet] = useState(false);
+  const [importing, setImporting] = useState(false);
   const configured = isSupabaseConfigured();
 
   useEffect(() => setThemeState(getTheme()), []);
@@ -269,7 +271,7 @@ export default function SettingsPage() {
           </div>
         </Section>
 
-        <Section title="Export">
+        <Section title="Your data">
           <button
             onClick={() => downloadCSV(readings, profile.apobMethod)}
             disabled={readings.length === 0}
@@ -279,6 +281,15 @@ export default function SettingsPage() {
               <Download size={17} aria-hidden /> Export CSV
             </span>
             <span className="text-ink-soft">{readings.length} readings</span>
+          </button>
+          <button
+            onClick={() => setImporting(true)}
+            className="pressable-row flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors"
+          >
+            <span className="inline-flex items-center gap-2">
+              <Upload size={17} aria-hidden /> Import CSV
+            </span>
+            <span className="text-ink-soft">Add past readings</span>
           </button>
         </Section>
 
@@ -364,6 +375,15 @@ export default function SettingsPage() {
       )}
 
       {passwordSheet && <PasswordSheet onClose={() => setPasswordSheet(false)} />}
+
+      {importing && (
+        <ImportSheet
+          profile={profile}
+          existing={readings}
+          onImport={importReadings}
+          onClose={() => setImporting(false)}
+        />
+      )}
 
     </>
   );

@@ -103,6 +103,23 @@ export function useAppData() {
     [],
   );
 
+  /* Import lands as one write and one state update: a hundred rows arriving
+     one at a time would re-render and re-sort the whole list a hundred times. */
+  const importReadings = useCallback(
+    async (incoming: Omit<Reading, "id">[]) => {
+      const saved = await getReadingStore().saveMany(incoming);
+      setReadings((rows) => {
+        const next = (rows ?? [])
+          .concat(saved)
+          .sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp));
+        if (cache) cache = { ...cache, readings: next };
+        return next;
+      });
+      return saved.length;
+    },
+    [],
+  );
+
   const deleteReading = useCallback(async (id: string) => {
     await getReadingStore().remove(id);
     setReadings((rows) => {
@@ -197,7 +214,7 @@ export function useAppData() {
     error,
     needsOnboarding,
     readings: readings ?? [],
-    profile, saveProfile, saveReading, deleteReading,
+    profile, saveProfile, saveReading, deleteReading, importReadings,
     enriched, descending,
     latestFor, trendFor, provenanceFor, rowMetrics,
   };
