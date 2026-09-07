@@ -86,9 +86,11 @@ provider that backs password sign-in, not just magic links. Set **Enable email
 signups** *off*: the only account this app needs already exists, and leaving
 signups on lets anyone who finds the URL create one.
 
-While you are here, turn on **leaked password protection** (Authentication →
-Policies). Supabase's own advisor flags it as off, and it costs one toggle:
-it checks new passwords against HaveIBeenPwned.
+Supabase's security advisor will flag **leaked password protection** as disabled
+on this project. That is a **Pro-plan feature** and cannot be enabled on Hobby,
+so treat the warning as permanent and expected rather than an outstanding task.
+What stands in for it: the password is set once, by hand, and is not reused
+anywhere else — so pick a long random one when you change it from Settings.
 
 ### 3. Allow the sign-in URLs
 
