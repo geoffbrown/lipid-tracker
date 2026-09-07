@@ -65,21 +65,24 @@ alter table public.profiles enable row level security;
 -- Row-level security is the only barrier between users' data. It is enforced
 -- in Postgres rather than in the client, which is what makes the anon key safe
 -- to ship in the browser bundle.
+--
+-- auth.uid() is wrapped in a select so the planner evaluates it once per query
+-- rather than once per row; see 0002 for why. The predicate is unchanged.
 do $$
 declare t text;
 begin
   foreach t in array array['readings', 'profiles'] loop
     execute format('drop policy if exists %I on public.%I', t || '_select_own', t);
-    execute format('create policy %I on public.%I for select using (auth.uid() = user_id)',
+    execute format('create policy %I on public.%I for select using ((select auth.uid()) = user_id)',
                    t || '_select_own', t);
     execute format('drop policy if exists %I on public.%I', t || '_insert_own', t);
-    execute format('create policy %I on public.%I for insert with check (auth.uid() = user_id)',
+    execute format('create policy %I on public.%I for insert with check ((select auth.uid()) = user_id)',
                    t || '_insert_own', t);
     execute format('drop policy if exists %I on public.%I', t || '_update_own', t);
-    execute format('create policy %I on public.%I for update using (auth.uid() = user_id) with check (auth.uid() = user_id)',
+    execute format('create policy %I on public.%I for update using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id)',
                    t || '_update_own', t);
     execute format('drop policy if exists %I on public.%I', t || '_delete_own', t);
-    execute format('create policy %I on public.%I for delete using (auth.uid() = user_id)',
+    execute format('create policy %I on public.%I for delete using ((select auth.uid()) = user_id)',
                    t || '_delete_own', t);
   end loop;
 end $$;
