@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import ReadingRow from "@/components/ReadingRow";
-import BottomNav from "@/components/BottomNav";
+import Header from "@/components/Header";
 import Segmented from "@/components/Segmented";
 import ReadingDetail from "@/components/ReadingDetail";
 import AddEditSheet from "@/components/AddEditSheet";
@@ -50,9 +50,10 @@ export default function HistoryPage() {
 
   return (
     <>
-      <main className="mx-auto max-w-[600px] px-4 pb-28">
+      <Header />
+      <main className="mx-auto max-w-3xl px-4 pb-28 sm:px-6 sm:pb-14 sm:pt-2">
         <header className="flex items-baseline justify-between py-4">
-          <h1 className="text-xl font-extrabold tracking-tight">History</h1>
+          <h1 className="text-xl font-extrabold tracking-tight sm:text-3xl">History</h1>
           <span className="text-ink-soft">{scoped.length} readings</span>
         </header>
 
@@ -101,7 +102,6 @@ export default function HistoryPage() {
           onClose={() => setEditing(undefined)}
         />
       )}
-      <BottomNav />
     </>
   );
 }

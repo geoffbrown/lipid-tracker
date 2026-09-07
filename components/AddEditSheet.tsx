@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Sheet from "./Sheet";
 import SelectSheet from "./SelectSheet";
+import DateTimePicker from "./DateTimePicker";
 import ConfirmDialog from "./ConfirmDialog";
 import { calcDerived, getDispLDL } from "@/lib/calc.js";
 import { parseNum, validateReading } from "@/lib/validation.js";
@@ -128,10 +129,10 @@ export default function AddEditSheet({
           </div>
         )}
 
-        <label className="mb-1 block text-ink-soft" htmlFor="ll-when">When</label>
-        <input
-          id="ll-when" type="datetime-local" className={input}
-          value={f.timestamp} onChange={(e) => set("timestamp", e.target.value)}
+        <p className="mb-1 text-ink-soft">When</p>
+        <DateTimePicker
+          value={new Date(f.timestamp)}
+          onChange={(d) => set("timestamp", toLocalInput(d.toISOString()))}
         />
 
         <p className="mt-4 mb-1 text-ink-soft">Source</p>
@@ -141,7 +142,7 @@ export default function AddEditSheet({
               key={s}
               onClick={() => setSource(s)}
               aria-pressed={f.source === s}
-              className={`min-w-0 flex-1 rounded-lg border py-2.5 font-semibold ${
+              className={`pressable min-w-0 flex-1 rounded-lg border py-2.5 font-semibold transition-colors duration-[var(--dur-fast)] ease-[var(--ease-standard)] ${
                 f.source === s ? "border-strong bg-paper-2" : "border-line"
               }`}
             >
@@ -169,19 +170,31 @@ export default function AddEditSheet({
               />
             </div>
           ))}
-          {/* Manual ApoB is accepted for lab draws only; a home device does not
-              measure it, so offering the field there would invite fiction. */}
-          {f.source === "Lab" && (
-            <div className="min-w-0">
+        </div>
+
+        {/* Manual ApoB is accepted for lab draws only; a home device does not
+            measure it, so offering the field there would invite fiction. The
+            0fr/1fr grid row is what makes that appearance animate: height alone
+            is not transitionable from `auto`, so switching source used to jump
+            the sheet a whole field taller in a single frame. */}
+        <div
+          className={`grid transition-[grid-template-rows,opacity] duration-[var(--dur-enter)] ease-[var(--ease-standard)] ${
+            f.source === "Lab" ? "mt-3 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+          }`}
+          aria-hidden={f.source !== "Lab"}
+        >
+          <div className="overflow-hidden">
+            <div className="min-w-0 sm:w-[calc(50%-0.375rem)]">
               <label className="mb-1 block text-ink-soft" htmlFor="ll-apob">ApoB (measured)</label>
               <input
                 id="ll-apob" type="number" inputMode="decimal" placeholder="mg/dL"
                 className={input} value={f.apobMeasured}
+                tabIndex={f.source === "Lab" ? undefined : -1}
                 onWheel={(e) => e.currentTarget.blur()}
                 onChange={(e) => set("apobMeasured", e.target.value)}
               />
             </div>
-          )}
+          </div>
         </div>
 
         <div className="mt-4">

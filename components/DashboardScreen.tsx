@@ -44,12 +44,14 @@ export default function DashboardScreen({ data }: { data: ReturnType<typeof useA
 
   return (
     <>
-      <main className="mx-auto max-w-[600px] px-4 pb-28">
-        <header className="flex items-center justify-between gap-3 py-4">
-          <h1 className="text-xl font-extrabold tracking-tight">LipidLog</h1>
+      <main className="mx-auto max-w-3xl px-4 pb-28 sm:px-6 sm:pb-14 sm:pt-2">
+        {/* The wordmark lives in the top bar from sm up, so this heading names
+            the page rather than repeating the app. */}
+        <header className="flex items-center justify-between gap-3 py-4 sm:pb-5 sm:pt-6">
+          <h1 className="text-xl font-extrabold tracking-tight sm:text-3xl">Dashboard</h1>
           <div className="flex items-center gap-2">
             {!isSupabaseConfigured() && (
-              <span className="rounded-full border border-line px-2.5 py-1 text-ink-soft">
+              <span className="rounded-full border border-line px-2.5 py-1 text-ink-soft sm:hidden">
                 This device only
               </span>
             )}

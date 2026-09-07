@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardScreen from "@/components/DashboardScreen";
-import BottomNav from "@/components/BottomNav";
+import Header from "@/components/Header";
 import { useAppData } from "@/lib/use-app-data";
 
 export default function DashboardPage() {
@@ -22,8 +22,8 @@ export default function DashboardPage() {
 
   return (
     <>
+      <Header />
       <DashboardScreen data={data} />
-      <BottomNav />
     </>
   );
 }

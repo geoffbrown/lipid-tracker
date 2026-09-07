@@ -80,7 +80,8 @@ export default function OnboardingPage() {
   return (
     /* svh, not vh: on mobile Safari `vh` measures the viewport without the
        browser chrome, which pushes the primary action under the toolbar. */
-    <main className="mx-auto grid min-h-[100svh] max-w-[600px] grid-rows-[auto_auto_1fr_auto] px-4">
+    <main className="mx-auto flex min-h-[100svh] w-full max-w-[600px] px-4 sm:items-center sm:py-10">
+      <div className="grid min-h-[100svh] w-full grid-rows-[auto_auto_1fr_auto] sm:min-h-[620px] sm:overflow-hidden sm:rounded-2xl sm:border sm:border-line sm:bg-paper sm:px-6 sm:shadow-card">
       <header className="flex h-14 shrink-0 items-center justify-between">
         {step === 0 ? (
           <Wordmark />
@@ -271,10 +272,7 @@ export default function OnboardingPage() {
         )}
       </div>
 
-      <div
-        className="shrink-0 bg-canvas pt-3"
-        style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
-      >
+      <div className="shrink-0 bg-canvas pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 sm:bg-transparent sm:pb-6">
         <button
           onClick={() => (step < STEPS - 1 ? setStep((s) => s + 1) : finish())}
           disabled={saving}
@@ -282,6 +280,7 @@ export default function OnboardingPage() {
         >
           {saving ? "Saving…" : step < STEPS - 1 ? "Continue" : "Add my first reading"}
         </button>
+        </div>
       </div>
     </main>
   );

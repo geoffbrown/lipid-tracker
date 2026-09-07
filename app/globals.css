@@ -147,6 +147,16 @@
 .dialog-in    { animation: dialog-in var(--dur-enter) var(--ease-sheet) both; }
 .dialog-out   { animation: dialog-out var(--dur-exit) var(--ease-standard) both; }
 
+/* From tablet width up, Sheet stops being a bottom sheet and becomes a centred
+   dialog (see components/Sheet.tsx). The animation has to move with it: sliding
+   up from the bottom edge reads as broken once the panel is no longer attached
+   to that edge. Same class names, so the component does not branch on width for
+   this — only for the drag gesture, which has no meaning on a pointer device. */
+@media (min-width: 640px) {
+  .sheet-in  { animation: dialog-in var(--dur-enter) var(--ease-sheet) both; }
+  .sheet-out { animation: dialog-out var(--dur-exit) var(--ease-standard) both; }
+}
+
 /* Touch feedback. A native control acknowledges the finger before anything
    else happens; without it every tap feels like it may not have registered. */
 .pressable {

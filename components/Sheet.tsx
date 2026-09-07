@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 
 /**
- * Bottom sheet.
+ * A bottom sheet on a phone, a centred dialog from `sm` up.
  *
  * Animating *out* is the part that makes this feel native, and it is why the
  * component owns its own dismissal: every exit path — backdrop, close button,
@@ -12,9 +12,16 @@ import { X } from "lucide-react";
  * then tells the parent to unmount. A parent that unmounts on click would make
  * the sheet vanish, which is what the app did before.
  *
+ * The responsive half is deliberately split between here and CSS. Layout and
+ * the gesture live here, because they are structural; the enter/exit animation
+ * lives in globals.css under a media query on the same `sheet-in`/`sheet-out`
+ * class names, because a panel centred on screen must not slide up from an edge
+ * it is no longer attached to.
+ *
  * Dragging follows the finger 1:1 downward and is rubber-banded upward, because
  * a sheet that can be dragged up past its own top edge feels broken. Release
- * past a third of the height, or with real downward speed, dismisses.
+ * past a third of the height, or with real downward speed, dismisses. It is
+ * disabled from `sm` up, where there is no bottom edge to drag toward.
  */
 export default function Sheet({
   title, onClose, children, footer,
@@ -34,8 +41,19 @@ export default function Sheet({
   const [drag, setDrag] = useState(0);
   const gesture = useRef<{ y: number; t: number; last: number; lastT: number } | null>(null);
   const [dragging, setDragging] = useState(false);
+  /* Matches the `sm` breakpoint the classes below use. Starts false so the
+     server render and the first client render agree. */
+  const [isDialog, setIsDialog] = useState(false);
 
   const requestClose = useCallback(() => setClosing(true), []);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)");
+    const sync = () => setIsDialog(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && requestClose();
@@ -50,7 +68,12 @@ export default function Sheet({
   }, [requestClose]);
 
   const onPointerDown = (e: React.PointerEvent) => {
-    // Only from the grab area — dragging from the body would fight scrolling.
+    if (isDialog) return;
+    /* Never capture a press that landed on a control. setPointerCapture
+       retargets the rest of the sequence to this div, and the browser then does
+       not synthesize a click on the element actually pressed — which is why the
+       close button inside this grab area used to do nothing at all. */
+    if ((e.target as HTMLElement).closest("button, a, input, select, textarea")) return;
     gesture.current = { y: e.clientY, t: performance.now(), last: e.clientY, lastT: performance.now() };
     setDragging(true);
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -80,7 +103,7 @@ export default function Sheet({
 
   return (
     <div
-      className={`fixed inset-0 z-40 flex items-end justify-center bg-black/50 ${
+      className={`fixed inset-0 z-40 flex items-end justify-center bg-black/50 sm:items-center sm:p-6 ${
         closing ? "backdrop-out" : "backdrop-in"
       }`}
       onClick={requestClose}
@@ -97,12 +120,12 @@ export default function Sheet({
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
         onAnimationEnd={(e) => { if (e.target === e.currentTarget && !closing) setEntered(true); }}
-        className={`flex max-h-[92vh] w-full min-w-0 max-w-[600px] flex-col rounded-t-2xl bg-canvas outline-none ${
+        className={`flex max-h-[92vh] w-full min-w-0 max-w-[600px] flex-col rounded-t-2xl bg-canvas outline-none sm:max-h-[85vh] sm:max-w-[560px] sm:rounded-2xl sm:border sm:border-line sm:shadow-pop ${
           closing ? "sheet-out" : entered ? "" : "sheet-in"
         }`}
         style={{
           paddingBottom: "env(safe-area-inset-bottom)",
-          transform: drag ? `translateY(${drag}px)` : undefined,
+          transform: !isDialog && drag ? `translateY(${drag}px)` : undefined,
           transition: dragging ? "none" : "transform var(--dur-fast) var(--ease-standard)",
         }}
       >
@@ -111,16 +134,19 @@ export default function Sheet({
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
-          className="shrink-0 cursor-grab touch-none active:cursor-grabbing"
+          className={`shrink-0 touch-none ${
+            isDialog ? "" : "cursor-grab active:cursor-grabbing"
+          }`}
         >
-          {/* Grabber: the affordance that says this can be pulled down. */}
-          <div className="mx-auto mt-3 h-1 w-9 rounded-full bg-line-strong" aria-hidden />
-          <div className="flex items-center justify-between gap-4 px-4 pb-3 pt-4">
+          {/* Grabber: the affordance that says this can be pulled down. It is a
+              lie on a pointer device, so it does not appear there. */}
+          <div className="mx-auto mt-3 h-1 w-9 rounded-full bg-line-strong sm:hidden" aria-hidden />
+          <div className="flex items-center justify-between gap-4 px-4 pb-3 pt-4 sm:pt-5">
             <h2 className="text-xl font-extrabold tracking-tight">{title}</h2>
             <button
               onClick={requestClose}
               aria-label="Close"
-              className="pressable grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line"
+              className="pressable grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line transition-colors hover:bg-paper-2"
             >
               <X size={17} aria-hidden />
             </button>
