@@ -39,9 +39,20 @@
   --color-warn-bg: #fffaeb;
   --color-danger-bg: #fef3f2;
 
-  /* Biomarker identity. Seven, because the app charts seven — a three-series
+  /* Biomarker identity. Eight, because the app charts eight — a three-series
      scale does not extend. LDL-red and HDL-green are conventional and worth
-     keeping, which is why hue is not also used to signal trend direction. */
+     keeping, which is why hue is not also used to signal trend direction; an
+     olive non-HDL is therefore not a verdict about non-HDL, and status colour
+     lives in --color-success/--color-danger instead.
+
+     Non-HDL takes the violet gap (~294°) rather than the geometrically wider
+     amber-to-green one, because even spacing is the wrong objective here. The
+     pair that must never be confused is non-HDL and HDL — they are semantic
+     opposites, and non-HDL is literally TC minus HDL, so reading one as the
+     other inverts the meaning. An olive at ~92° sat next to HDL-green on the
+     dashboard and did exactly that. Landing beside ApoB instead costs nothing:
+     the two are near-synonyms for atherogenic burden, so confusing them at a
+     glance still leaves you with the right idea. */
   --color-bm-ldl: #df3f2e;
   --color-bm-hdl: #1b9e5a;
   --color-bm-tc: #2e6fe0;
@@ -49,6 +60,7 @@
   --color-bm-apob: #7b4fd4;
   --color-bm-tchdl: #128591;
   --color-bm-tghdl: #c2417e;
+  --color-bm-nonhdl: #a63bb5;
 
   /* Source identity. The badge tints its own hue, which never reaches 4.5:1 on
      its own, so the label takes a separately solved variant. */

@@ -20,6 +20,10 @@ export const BMS: Biomarker[] = [
     lowerBetter: true,  scale: [0, 320], marks: [200, 240] },
   { key: "tg",    label: "TG",     unit: "mg/dL", color: "var(--color-bm-tg)",
     lowerBetter: true,  scale: [0, 300], marks: [150, 200] },
+  /* Marks mirror the LDL marks at 100/160 plus the conventional +30 offset,
+     which is how the guidelines derive a non-HDL target from an LDL one. */
+  { key: "nonHDL", label: "Non-HDL", unit: "mg/dL", color: "var(--color-bm-nonhdl)",
+    lowerBetter: true,  scale: [0, 250], marks: [130, 190] },
   { key: "apob",  label: "ApoB",   unit: "mg/dL", color: "var(--color-bm-apob)",
     lowerBetter: true,  scale: [0, 180], marks: [90, 130] },
   { key: "tcHdl", label: "TC/HDL", unit: "",      color: "var(--color-bm-tchdl)",
