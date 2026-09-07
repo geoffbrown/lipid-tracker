@@ -41,6 +41,7 @@ whole path, but you do not need to repeat them.
 | Schema applied | `readings` + `profiles`, RLS enabled on both, policy per operation |
 | Vercel project | **lipidlog**, linked to `geoffbrown/lipid-tracker`, production branch `main` |
 | Live URL | <https://lipidlog.vercel.app> |
+| Account | `geoffreywbrown@gmail.com`, created directly in `auth.users`, email pre-confirmed |
 
 A separate Supabase project was created deliberately. The pre-existing one
 (`uaaneubpzsxtkjluywsy`) belongs to the grip strength tracker and already has
@@ -51,7 +52,7 @@ a grip-strength table.
 
 ---
 
-## What is left — four steps, about ten minutes
+## What is left — three steps, about ten minutes
 
 The deployed app is currently running in **local-store mode**: `/login` says
 there is no backend configured. That is the app correctly reporting that it has
@@ -78,22 +79,18 @@ are inlined at build time, so the existing build cannot pick them up.
 **How to tell it worked:** `/login` shows an email *and password* form instead of
 the "No account needed yet" card.
 
-### 2. Create your account in Supabase
-
-There is no sign-up screen, so the account is made by hand — once.
-
-**Supabase → lipidlog → Authentication → Users → Add user → Create new user.**
-Enter your email and a password, and tick **Auto Confirm User**. Without that
-tick the account exists but cannot sign in.
-
-### 3. Check email sign-in is enabled
+### 2. Check email sign-in is enabled
 
 **Authentication → Sign In / Providers → Email** must be **enabled** — it is the
-provider that backs password sign-in, not just magic links. Leave **Enable email
-signups** *off*: you have just created the only account this app needs, and
-leaving signups on lets anyone who finds the URL create one.
+provider that backs password sign-in, not just magic links. Set **Enable email
+signups** *off*: the only account this app needs already exists, and leaving
+signups on lets anyone who finds the URL create one.
 
-### 4. Allow the sign-in URLs
+While you are here, turn on **leaked password protection** (Authentication →
+Policies). Supabase's own advisor flags it as off, and it costs one toggle:
+it checks new passwords against HaveIBeenPwned.
+
+### 3. Allow the sign-in URLs
 
 **Authentication → URL Configuration:**
 
