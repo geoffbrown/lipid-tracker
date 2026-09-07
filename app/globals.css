@@ -138,6 +138,12 @@
 .backdrop-out { animation: backdrop-out var(--dur-exit) var(--ease-standard) both; }
 .sheet-in     { animation: sheet-in var(--dur-enter) var(--ease-sheet) both; }
 .sheet-out    { animation: sheet-out var(--dur-exit) var(--ease-standard) both; }
+@keyframes step-in {
+  from { opacity: 0; transform: translateY(10px) }
+  to   { opacity: 1; transform: none }
+}
+.step-in { animation: step-in var(--dur-enter) var(--ease-sheet) both; }
+
 .dialog-in    { animation: dialog-in var(--dur-enter) var(--ease-sheet) both; }
 .dialog-out   { animation: dialog-out var(--dur-exit) var(--ease-standard) both; }
 
@@ -200,6 +206,6 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
     scroll-behavior: auto !important;
   }
   /* Sheets still arrive, they just do not travel. */
-  .sheet-in, .sheet-out, .dialog-in, .dialog-out { animation: none !important; }
+  .sheet-in, .sheet-out, .dialog-in, .dialog-out, .step-in { animation: none !important; }
   .pressable:active { transform: none; }
 }
