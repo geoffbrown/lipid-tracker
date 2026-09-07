@@ -293,6 +293,26 @@ browser.
 
 ---
 
+## Password managers name this site "vercel"
+
+Apple Passwords, and most managers, key an entry on the site's registrable
+domain. On `lipidlog.vercel.app` that is what they show, and it means the saved
+password is filed under Vercel rather than LipidLog — alongside every other
+`*.vercel.app` app you ever sign into.
+
+The app now declares its own name (`applicationName`, `appleWebApp.title`, and a
+web manifest), which fixes the label the OS uses for an installed PWA and the
+iOS home-screen icon. **It does not change what a password manager files the
+entry under**, because that is derived from the domain, not the page.
+
+The only real fix is a custom domain: **Vercel → lipidlog → Settings → Domains**,
+add one you own, then update **Site URL** and **Redirect URLs** in Supabase to
+match. After that the entry is filed under your domain, and credentials stop
+being scoped alongside unrelated `vercel.app` sites — which is the more
+important half.
+
+---
+
 ## Troubleshooting
 
 **"This device only" still showing on the deployed site**

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, FileText, KeyRound, LogOut, Monitor, UserRound } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
+import Header from "@/components/Header";
 import Segmented from "@/components/Segmented";
 import Sheet from "@/components/Sheet";
 import { useAppData } from "@/lib/use-app-data";
@@ -159,8 +159,9 @@ export default function SettingsPage() {
 
   return (
     <>
-      <main className="mx-auto max-w-[600px] px-4 pb-28">
-        <h1 className="py-4 text-xl font-extrabold tracking-tight">Settings</h1>
+      <Header />
+      <main className="mx-auto max-w-3xl px-4 pb-28 sm:px-6 sm:pb-14 sm:pt-2">
+        <h1 className="py-4 text-xl font-extrabold tracking-tight sm:pb-5 sm:pt-6 sm:text-3xl">Settings</h1>
 
         <Section title="Appearance">
           <Row
@@ -353,7 +354,6 @@ export default function SettingsPage() {
 
       {passwordSheet && <PasswordSheet onClose={() => setPasswordSheet(false)} />}
 
-      <BottomNav />
     </>
   );
 }

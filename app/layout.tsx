@@ -4,7 +4,15 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "LipidLog",
+  applicationName: "LipidLog",
   description: "Longitudinal cholesterol tracking with calculated LDL and ApoB.",
+  // Names the app rather than the host wherever the OS shows one: the iOS
+  // home-screen label, the PWA install prompt, and the entry a password
+  // manager offers to save. It does not override the domain a password
+  // manager keys on — only a custom domain fixes that (see SETUP.md).
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "LipidLog" },
+  // Stop iOS auto-linking the numbers in a reading as phone numbers.
+  formatDetection: { telephone: false, date: false, email: false, address: false },
 };
 
 export const viewport: Viewport = {
