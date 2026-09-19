@@ -6,13 +6,14 @@ import Sheet from "./Sheet";
 import ConfirmDialog from "./ConfirmDialog";
 import SourceBadge from "./SourceBadge";
 import RangeRail from "./RangeRail";
-import { BM } from "@/lib/biomarkers";
+import { BM, ZONE_COLOR, zoneOf } from "@/lib/biomarkers";
 import { getDispLDL } from "@/lib/calc.js";
 import type { Enriched } from "@/lib/use-app-data";
 import type { Profile } from "@/lib/types";
 
 /* General, non-diagnostic reference ranges (ATP III-style). Informational
-   only — the app never classifies a reading as high or low. */
+   only: the band names and colours say where a value sits against these
+   published cut-points, not what it means for the person. */
 const REF: Record<string, string> = {
   ldl: "Optimal < 100 · High ≥ 160",
   hdl: "Low < 40 · Protective ≥ 60",
@@ -71,11 +72,23 @@ export default function ReadingDetail({
             /* Sub-rows are provenance (the as-reported figure, the method
                delta), not a value against a range, so they get no rail. */
             const bm = !r.sub && r.key ? BM(r.key) : undefined;
+            const zone = bm && typeof r.value === "number" ? zoneOf(bm, r.value) : null;
             return (
               <div key={i} className="px-1 py-3">
                 <div className="flex items-start justify-between gap-4">
                   <span className={r.sub ? "text-ink-soft" : ""}>{r.label}</span>
                   <span className="shrink-0 text-right">
+                    {/* The band's name, in the band's colour, ahead of the
+                        figure: the word carries the meaning for anyone who
+                        cannot rely on the colour. */}
+                    {zone && (
+                      <span
+                        className="mr-2 text-[13px] font-semibold"
+                        style={{ color: ZONE_COLOR[zone.status] }}
+                      >
+                        {zone.label}
+                      </span>
+                    )}
                     <span className={`tabular font-semibold ${r.sub ? "text-ink-soft" : ""}`}>
                       {r.value}{r.unit ? ` ${r.unit}` : ""}
                     </span>
