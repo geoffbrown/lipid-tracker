@@ -172,7 +172,7 @@ export default function TrendChart({
                 borderRadius: 10, fontSize: 15,
               }}
               labelFormatter={(t) => fmtDate(t as number)}
-              formatter={(v) => [v as number, a?.label ?? ""]}
+              formatter={(v, _name, item) => [v as number, BM(String(item?.dataKey ?? bmA))?.label ?? ""]}
             />
             {/* Drawn before the series so the data sits on top of its own fit. */}
             {fit && (
