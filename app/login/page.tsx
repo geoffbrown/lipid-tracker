@@ -13,6 +13,15 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
  * keeps the app from needing to send any email at all in normal use — see
  * SETUP.md.
  */
+/** Where to land after sign-in. Only the OAuth consent page sets this, so the
+ *  connection request it carries survives the round trip; anything that is not
+ *  a same-origin path is ignored. */
+function returnPath(): string {
+  const value = new URLSearchParams(window.location.search).get("redirect");
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return "/";
+  return value;
+}
+
 export default function LoginPage() {
   const configured = isSupabaseConfigured();
 
@@ -44,7 +53,7 @@ export default function LoginPage() {
          cleared it, which is exactly this request.
          assign(), not replace(), keeps the browser's own back behaviour;
          the gate bounces a signed-in visitor off /login anyway. */
-      window.location.assign("/");
+      window.location.assign(returnPath());
       return; // the document is being replaced — do not clear `busy`.
     } catch (err) {
       setBusy(false);
