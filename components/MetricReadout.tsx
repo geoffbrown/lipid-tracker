@@ -1,6 +1,8 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
+import RangeRail from "./RangeRail";
+import type { Biomarker } from "@/lib/biomarkers";
 
 export interface Trend {
   delta: number;
@@ -9,15 +11,24 @@ export interface Trend {
   prevSource: string;
 }
 
-export interface Biomarker {
-  key: string;
-  label: string;
-  unit: string;
-  color: string;
-  lowerBetter: boolean;
-  /** Domain for the range rail, and the reference thresholds marked on it. */
-  scale: [number, number];
-  marks: number[];
+/**
+ * Direction of a change. An inline SVG rather than the ▲/▼ glyphs: those come
+ * from whatever symbol font the platform falls back to, and its vertical
+ * metrics never quite match Inter's digits, so the arrow floats a pixel or
+ * two off the baseline on some machines and not others. Sized in em and
+ * placed so its centre sits at the digits' visual centre, this is identical
+ * everywhere.
+ */
+function TrendArrow({ up }: { up: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 10 10"
+      className="mr-px inline-block h-[0.55em] w-[0.6em] fill-current align-[0.085em]"
+      aria-hidden
+    >
+      <path d={up ? "M5 1 L10 9 L0 9 Z" : "M5 9 L10 1 L0 1 Z"} />
+    </svg>
+  );
 }
 
 /**
@@ -46,11 +57,6 @@ export default function MetricReadout({
   const trendClass = !trend
     ? ""
     : trend.crossSource ? "text-ink-soft" : favorable ? "text-success" : "text-ink-soft";
-
-  const pos = (v: number) => {
-    const [lo, hi] = bm.scale;
-    return Math.min(100, Math.max(0, ((v - lo) / (hi - lo)) * 100));
-  };
 
   return (
     <button
@@ -84,30 +90,13 @@ export default function MetricReadout({
       {/* Where this value sits against its reference thresholds. No numbers —
           the position is the point, and a lipid value only means something
           relative to its range. */}
-      <span className="relative mt-3.5 block h-[9px] w-full" aria-hidden>
-        <span className="absolute top-1/2 h-px w-full -translate-y-1/2 bg-line-strong" />
-        {/* Thresholds cross the rule, so they read as a scale rather than as
-            decoration. Without them the marker's position means nothing. */}
-        {bm.marks.map((m) => (
-          <span
-            key={m}
-            className="absolute top-0 h-full w-px bg-line-strong"
-            style={{ left: `${pos(m)}%` }}
-          />
-        ))}
-        {value != null && (
-          <span
-            className="absolute top-1/2 h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-            style={{ left: `${pos(value)}%`, background: bm.color }}
-          />
-        )}
-      </span>
+      <RangeRail bm={bm} value={value} className="mt-3.5" />
 
       <span className="mt-3 block text-[13px] leading-tight text-ink-soft">{provenance}</span>
       {trend && trend.delta !== 0 && (
         <span className="mt-1 block truncate text-[13px] text-ink-soft">
           <span className={`tabular font-semibold ${trendClass}`}>
-            {up ? "▲" : "▼"}
+            <TrendArrow up={up} />
             {Math.abs(trend.delta)}
           </span>{" "}
           {trend.crossSource ? `vs ${trend.prevSource}` : `since ${trend.since}`}

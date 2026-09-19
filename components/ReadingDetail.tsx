@@ -5,6 +5,8 @@ import { Pencil, Trash2 } from "lucide-react";
 import Sheet from "./Sheet";
 import ConfirmDialog from "./ConfirmDialog";
 import SourceBadge from "./SourceBadge";
+import RangeRail from "./RangeRail";
+import { BM } from "@/lib/biomarkers";
 import { getDispLDL } from "@/lib/calc.js";
 import type { Enriched } from "@/lib/use-app-data";
 import type { Profile } from "@/lib/types";
@@ -65,19 +67,29 @@ export default function ReadingDetail({
         </p>
 
         <div className="divide-y divide-line border-y border-line">
-          {rows.map((r, i) => (
-            <div key={i} className="flex items-start justify-between gap-4 px-1 py-3">
-              <span className={r.sub ? "text-ink-soft" : ""}>{r.label}</span>
-              <span className="shrink-0 text-right">
-                <span className={`tabular font-semibold ${r.sub ? "text-ink-soft" : ""}`}>
-                  {r.value}{r.unit ? ` ${r.unit}` : ""}
-                </span>
-                {!r.sub && r.key && REF[r.key] && (
-                  <span className="mt-0.5 block text-[13px] text-ink-faint">{REF[r.key]}</span>
+          {rows.map((r, i) => {
+            /* Sub-rows are provenance (the as-reported figure, the method
+               delta), not a value against a range, so they get no rail. */
+            const bm = !r.sub && r.key ? BM(r.key) : undefined;
+            return (
+              <div key={i} className="px-1 py-3">
+                <div className="flex items-start justify-between gap-4">
+                  <span className={r.sub ? "text-ink-soft" : ""}>{r.label}</span>
+                  <span className="shrink-0 text-right">
+                    <span className={`tabular font-semibold ${r.sub ? "text-ink-soft" : ""}`}>
+                      {r.value}{r.unit ? ` ${r.unit}` : ""}
+                    </span>
+                    {!r.sub && r.key && REF[r.key] && (
+                      <span className="mt-0.5 block text-[13px] text-ink-faint">{REF[r.key]}</span>
+                    )}
+                  </span>
+                </div>
+                {bm && typeof r.value === "number" && (
+                  <RangeRail bm={bm} value={r.value} labels className="mt-2.5" />
                 )}
-              </span>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
 
         {ldl?.blocked && (
