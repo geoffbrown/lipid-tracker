@@ -293,6 +293,79 @@ browser.
 
 ---
 
+## Part 4 — Talk to it from Claude (MCP)
+
+The app hosts an MCP server at `https://your-app.vercel.app/api/mcp`. Add it to
+Claude as a custom connector and you can log a reading or ask about a trend in
+plain conversation, on the phone included. It uses the OAuth 2.1 server built
+into Supabase Auth, so Claude signs in as you and every query runs under the
+same row-level security as the app. Nothing new is stored, and the server holds
+no privileged key. Three settings in the Supabase dashboard, then one in Claude.
+
+### 4.1 Turn on the OAuth server
+
+**Authentication → OAuth Server**:
+
+- Enable **OAuth 2.1 server**.
+- **Authorization Path**: `/oauth/consent`. Supabase sends people to
+  *Site URL + this path* to approve a connection, and the app serves that page.
+- Enable **Dynamic client registration**. Claude registers itself as a client
+  the first time it connects; without this the handshake fails at the first
+  step. The consent screen still asks you to approve every client by hand.
+
+Check that **Authentication → URL Configuration → Site URL** is the production
+URL (Part 3.4). The authorization path is appended to whatever is there, so a
+`localhost` site URL sends the consent screen to your laptop.
+
+### 4.2 Add the connector in Claude
+
+In Claude, go to **Settings → Connectors → Add custom connector**. Name it
+*LipidLog* and paste `https://your-app.vercel.app/api/mcp` as the URL. Leave
+the OAuth client ID and secret blank: Claude finds the authorization server
+from the app's `/.well-known/oauth-protected-resource` document and registers
+itself.
+
+Click **Connect**. You land on the app's sign-in page if you are not already
+signed in, then on a consent screen naming the client. **Allow** completes it.
+Back in Claude, the connector shows its tools:
+
+| Tool | What it does |
+| --- | --- |
+| `get_latest_panel` | Newest reading plus the latest known value and change for every metric |
+| `list_readings` | Readings newest first, with raw inputs and derived values, filterable |
+| `get_trend` | One metric over 30d / 90d / 1y / all, oldest first, with first, last, change |
+| `add_reading` | Records a reading; unusual values are held until confirmed, as in the app |
+| `update_reading` / `delete_reading` | By id, with the same validation |
+| `get_profile` / `update_profile` | LDL and ApoB methods, Lp(a), default source and device |
+
+Every number comes from `lib/calc.js` under your chosen methods, so what Claude
+says matches what the app shows.
+
+### 4.3 Revoking
+
+Each connection is an OAuth grant on your Supabase user. Remove the connector
+in Claude to stop it using the token; **Authentication → OAuth Server →
+Clients** in Supabase lists registered clients if you want to delete one there
+too.
+
+### Troubleshooting the connector
+
+**"Could not connect" straight away** — open
+`https://your-app.vercel.app/.well-known/oauth-protected-resource` in a
+browser. It should be JSON naming `https://<ref>.supabase.co/auth/v1` as the
+authorization server. If it redirects to `/login`, the deploy is older than
+`proxy.ts` letting `/.well-known/` through.
+
+**Consent page says the request expired** — the `authorization_id` is
+single-use and short-lived. Start again from Claude rather than reloading.
+
+**Consent page never appears; Claude errors after sign-in** — Site URL is not
+the production URL, or the Authorization Path is not `/oauth/consent`.
+
+**Registration fails** — dynamic client registration is off (4.1).
+
+---
+
 ## Password managers name this site "vercel"
 
 Apple Passwords, and most managers, key an entry on the site's registrable

@@ -16,6 +16,15 @@ import {
 export async function proxy(request: NextRequest) {
   if (!isSupabaseConfigured()) return NextResponse.next();
 
+  const path = request.nextUrl.pathname;
+
+  /* The MCP endpoint authenticates with a bearer token, not a cookie, and the
+     OAuth discovery document has to be readable by anyone. Neither is a page,
+     so a redirect to /login would only break the machine on the other end. */
+  if (path.startsWith("/api/mcp") || path.startsWith("/.well-known/")) {
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -39,7 +48,6 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const path = request.nextUrl.pathname;
   const isAuthRoute = path.startsWith("/login") || path.startsWith("/auth");
 
   /* getUser() may rotate an expiring token, and setAll() writes the new pair
@@ -47,18 +55,41 @@ export async function proxy(request: NextRequest) {
      refresh token has already been spent server-side, so the browser would
      keep sending the old one and get signed out at an arbitrary moment an hour
      in. Every response out of here carries those cookies. */
-  const redirectTo = (pathname: string) => {
+  const redirectTo = (pathname: string, search = "") => {
     const url = request.nextUrl.clone();
     url.pathname = pathname;
+    url.search = search;
     const redirect = NextResponse.redirect(url);
     response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
     return redirect;
   };
 
-  if (!user && !isAuthRoute) return redirectTo("/login");
-  if (user && path.startsWith("/login")) return redirectTo("/");
+  if (!user && !isAuthRoute) {
+    /* The OAuth consent page arrives with an authorization_id that must
+       survive the sign-in, so /login is told where to come back to. Nothing
+       else needs this: the app has one home and lands there. */
+    if (path.startsWith("/oauth/consent")) {
+      const back = `${path}${request.nextUrl.search}`;
+      return redirectTo("/login", `?redirect=${encodeURIComponent(back)}`);
+    }
+    return redirectTo("/login");
+  }
+  if (user && path.startsWith("/login")) {
+    const back = safeReturnPath(request.nextUrl.searchParams.get("redirect"));
+    if (back) {
+      const url = new URL(back, request.nextUrl.origin);
+      return redirectTo(url.pathname, url.search);
+    }
+    return redirectTo("/");
+  }
 
   return response;
+}
+
+/** Only a same-origin path is honoured: never a scheme, never a host. */
+function safeReturnPath(value: string | null): string | null {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return null;
+  return value;
 }
 
 export const config = {
