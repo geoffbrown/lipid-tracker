@@ -19,9 +19,14 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
   /* The MCP endpoint authenticates with a bearer token, not a cookie, and the
-     OAuth discovery document has to be readable by anyone. Neither is a page,
-     so a redirect to /login would only break the machine on the other end. */
-  if (path.startsWith("/api/mcp") || path.startsWith("/.well-known/")) {
+     OAuth discovery document has to be readable by anyone, and the keep-alive
+     cron carries no session. None is a page, so a redirect to /login would
+     only break the machine on the other end. */
+  if (
+    path.startsWith("/api/mcp") ||
+    path.startsWith("/api/keepalive") ||
+    path.startsWith("/.well-known/")
+  ) {
     return NextResponse.next();
   }
 
